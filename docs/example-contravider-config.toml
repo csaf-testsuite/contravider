@@ -1,0 +1,12 @@
+# Logging configuration
+#[log]
+#file = "contravider.log"
+#level = "DEBUG"        # Options: DEBUG, INFO, WARN, ERROR
+#source = false
+#json = false
+
+# Web server configuration
+#[web]
+#host = "localhost"
+#port = 8083
+#root = "web"
