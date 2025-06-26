@@ -1,0 +1,1 @@
+CSAF: https://localhost//.well-known/csaf/provider-metadata.json

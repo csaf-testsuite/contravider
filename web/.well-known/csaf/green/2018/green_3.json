@@ -1,0 +1,92 @@
+{
+  "document": {
+    "category": "csaf_security_advisory",
+    "csaf_version": "2.0",
+    "distribution": {
+      "tlp": {
+        "label": "GREEN",
+        "url": "https://www.first.org/tlp/"
+      }
+    },
+    "lang": "en",
+    "publisher": {
+      "category": "vendor",
+      "contact_details": "No need to contact us.\n",
+      "issuing_authority": "Issuing authority",
+      "name": "Name",
+      "namespace": "https://www.example.com"
+    },
+    "references": [
+      {
+        "category": "self",
+        "summary": "A canonical url",
+        "url": "{{.CanonicalURL}}"
+      }
+    ],
+    "title": "Advisory_green",
+    "tracking": {
+      "current_release_date": "2022-11-11T11:00:00.000Z",
+      "generator": {
+        "date": "2025-04-11T11:46:24.510Z",
+        "engine": {
+          "name": "Secvisogram",
+          "version": "2.5.23"
+        }
+      },
+      "id": "green_3",
+      "initial_release_date": "2018-01-01T11:00:00.000Z",
+      "revision_history": [
+        {
+          "date": "2018-01-01T11:00:00.000Z",
+          "number": "1",
+          "summary": "Initial Release"
+        },
+        {
+          "date": "2020-01-01T11:00:00.000Z",
+          "number": "2",
+          "summary": "Interim Release"
+        },
+        {
+          "date": "2022-11-11T11:00:00.000Z",
+          "number": "3",
+          "summary": "Final Release"
+        }
+      ],
+      "status": "final",
+      "version": "3"
+    }
+  },
+  "product_tree": {
+    "full_product_names": [
+      {
+        "name": "Product 1",
+        "product_id": "p1",
+        "product_identification_helper": {
+          "serial_numbers": [
+            "123"
+          ]
+        }
+      }
+    ]
+  },
+  "vulnerabilities": [
+    {
+      "discovery_date": "1990-01-01T11:00:00.000Z",
+      "notes": [
+        {
+          "audience": "Everyone",
+          "category": "description",
+          "text": "Nothing",
+          "title": "Title of note"
+        }
+      ],
+      "product_status": {
+        "known_not_affected": [
+          "p1"
+        ]
+      },
+      "release_date": "1990-02-01T11:00:00.000Z",
+      "title": "Vulnerability 1"
+    }
+  ]
+}
