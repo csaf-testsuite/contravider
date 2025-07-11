@@ -6,7 +6,9 @@
 #json = false
 
 # Web server configuration
-#[web]
-#host = "localhost"
-#port = 8083
-#root = "web"
+[web]
+host = "localhost"
+port = 8443
+root = "web"
+tls_cert_file = "config/server.crt"
+tls_key_file = "config/server.key"

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"flag"
 	"fmt"
 	"log/slog"
@@ -37,11 +38,21 @@ func run(cfg *config.Config) error {
 		return err
 	}
 
+	// Require TLS certificate and key to be set. Abort if not configured.
+	if cfg.Web.TLSCertFile == "" {
+		return fmt.Errorf("web server requires TLS certificate to be set")
+	} else if cfg.Web.TLSKeyFile == "" {
+		return fmt.Errorf("web server requires TLS key to be set")
+	}
+
 	addr := cfg.Web.Addr()
-	slog.Info("Starting web server", "address", addr)
+	slog.Info("Starting HTTPS server", "address", addr)
 	srv := &http.Server{
 		Addr:    addr,
 		Handler: ctrl.Bind(),
+		TLSConfig: &tls.Config{
+			MinVersion: tls.VersionTLS12,
+		},
 	}
 
 	// Check if we should serve on an unix domain socket.
@@ -71,7 +82,13 @@ func run(cfg *config.Config) error {
 		defer close(done)
 		serve := srv.ListenAndServe
 		if listener != nil {
+			// Local unix socket, not TLS required
 			serve = func() error { return srv.Serve(listener) }
+		} else {
+			// Serve TLS
+			serve = func() error {
+				return srv.ListenAndServeTLS(cfg.Web.TLSCertFile, cfg.Web.TLSKeyFile)
+			}
 		}
 		if err := serve(); err != http.ErrServerClosed {
 			srvErrors <- err
