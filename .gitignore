@@ -26,3 +26,5 @@ go.work.sum
 
 # Cert/Key files
 *.pem
+*.crt
+*.key
