@@ -10,3 +10,5 @@
 #host = "localhost"
 #port = 8083
 #root = "web"
+username = "alice"
+password = "secret"
