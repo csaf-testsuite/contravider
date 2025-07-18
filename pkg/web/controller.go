@@ -52,10 +52,10 @@ func NewController(
 }
 
 // requireAuth enforces HTTP Basic Auth for protected paths
-func requireAuth(next http.Handler) http.Handler {
+func (c *Controller) requireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, pass, ok := r.BasicAuth()
-		if !ok || !validate(user, pass) {
+		if !ok || !c.validate(user, pass) {
 			w.Header().Set("WWW-Authenticate", `Basic realm="restricted"`)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
@@ -67,8 +67,8 @@ func requireAuth(next http.Handler) http.Handler {
 
 // validate checks the supplied credentials.
 // Replace this with a real lookup (config file, DB, etc.).
-func validate(user, pass string) bool {
-	return user == "alice" && pass == "secret"
+func (c *Controller) validate(user, pass string) bool {
+	return user == c.cfg.Web.Username && pass == c.cfg.Web.Password
 }
 
 // Bind return a http handler to be used in a web server.
@@ -101,8 +101,8 @@ func (c *Controller) Bind() http.Handler {
 	router.Handle("/.well-known/csaf/green/", green)
 
 	// protected folder
-	router.Handle("/.well-known/csaf/amber/", requireAuth(http.FileServer(http.Dir(c.cfg.Web.Root))))
+	router.Handle("/.well-known/csaf/amber/", c.requireAuth(http.FileServer(http.Dir(c.cfg.Web.Root))))
 
-	router.Handle("/.well-known/csaf/red/", requireAuth(http.FileServer(http.Dir(c.cfg.Web.Root))))
+	router.Handle("/.well-known/csaf/red/", c.requireAuth(http.FileServer(http.Dir(c.cfg.Web.Root))))
 	return router
 }
