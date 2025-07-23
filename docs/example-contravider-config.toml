@@ -10,5 +10,5 @@
 host = "localhost"
 port = 8443
 root = "web"
-tls_cert_file = "config/server.crt"
-tls_key_file = "config/server.key"
+tls_cert_file = "config/test_server.crt"
+tls_key_file = "config/test_server.key"
