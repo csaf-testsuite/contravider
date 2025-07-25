@@ -35,9 +35,11 @@ type Log struct {
 
 // Web are the config options for the web interface.
 type Web struct {
-	Host string `toml:"host"`
-	Port int    `toml:"port"`
-	Root string `toml:"root"`
+	Host     string `toml:"host"`
+	Port     int    `toml:"port"`
+	Root     string `toml:"root"`
+	Username string `toml:"username"`
+	Password string `toml:"password"`
 }
 
 // Config are all the configuration options.
