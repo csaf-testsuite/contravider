@@ -25,6 +25,10 @@ const (
 	defaultWebRoot = "web"
 )
 
+const (
+	defaultProvidersGitURL = "https://github.com/csaf-testsuite/distribution.git"
+)
+
 // Log are the config options for the logging.
 type Log struct {
 	File   string     `toml:"file"`
@@ -42,11 +46,17 @@ type Web struct {
 	Password string `toml:"password"`
 }
 
+type Providers struct {
+	GitURL   string              `toml:"git_url"`
+	Profiles map[string][]string `toml:"profiles"`
+}
+
 // Config are all the configuration options.
 type Config struct {
-	Log      Log      `toml:"log"`
-	Web      Web      `toml:"web"`
-	Sessions Sessions `toml:"sessions"`
+	Log       Log       `toml:"log"`
+	Web       Web       `toml:"web"`
+	Sessions  Sessions  `toml:"sessions"`
+	Providers Providers `toml:"providers"`
 }
 
 // Addr returns the combined address the web server should bind to.
@@ -72,6 +82,9 @@ func Load(file string) (*Config, error) {
 		Sessions: Sessions{
 			Secret: nil,
 			MaxAge: defaultSessionMaxAge,
+		},
+		Providers: Providers{
+			GitURL: defaultProvidersGitURL,
 		},
 	}
 	if file != "" {
@@ -103,12 +116,13 @@ func (cfg *Config) fillFromEnv() error {
 		storeLevel  = store(storeLevel)
 	)
 	return storeFromEnv(
-		envStore{"OQC_LOG_FILE", storeString(&cfg.Log.File)},
-		envStore{"OQC_LOG_LEVEL", storeLevel(&cfg.Log.Level)},
-		envStore{"OQC_LOG_JSON", storeBool(&cfg.Log.JSON)},
-		envStore{"OQC_LOG_SOURCE", storeBool(&cfg.Log.Source)},
-		envStore{"OQC_WEB_HOST", storeString(&cfg.Web.Host)},
-		envStore{"OQC_WEB_PORT", storeInt(&cfg.Web.Port)},
-		envStore{"OQC_WEB_ROOT", storeString(&cfg.Web.Root)},
+		envStore{"CONTRAVIDER_LOG_FILE", storeString(&cfg.Log.File)},
+		envStore{"CONTRAVIDER_LOG_LEVEL", storeLevel(&cfg.Log.Level)},
+		envStore{"CONTRAVIDER_LOG_JSON", storeBool(&cfg.Log.JSON)},
+		envStore{"CONTRAVIDER_LOG_SOURCE", storeBool(&cfg.Log.Source)},
+		envStore{"CONTRAVIDER_WEB_HOST", storeString(&cfg.Web.Host)},
+		envStore{"CONTRAVIDER_WEB_PORT", storeInt(&cfg.Web.Port)},
+		envStore{"CONTRAVIDER_WEB_ROOT", storeString(&cfg.Web.Root)},
+		envStore{"CONTRAVIDER_PROVIDERS_GIT_URL", storeString(&cfg.Providers.GitURL)},
 	)
 }

@@ -7,11 +7,13 @@ import (
 	"text/template"
 
 	"github.com/csaf-testsuite/contravider/pkg/config"
+	"github.com/csaf-testsuite/contravider/pkg/providers"
 )
 
 // Controller binds the endpoints to the internal logic.
 type Controller struct {
 	cfg   *config.Config
+	sys   *providers.System
 	tmpls *template.Template
 }
 
@@ -37,6 +39,7 @@ var templateFuncs = template.FuncMap{}
 // NewController returns a new Controller.
 func NewController(
 	cfg *config.Config,
+	sys *providers.System,
 ) (*Controller, error) {
 	path := filepath.Join(cfg.Web.Root, "templates", "*.tmpl")
 
@@ -47,6 +50,7 @@ func NewController(
 
 	return &Controller{
 		cfg:   cfg,
+		sys:   sys,
 		tmpls: tmpls,
 	}, nil
 }
