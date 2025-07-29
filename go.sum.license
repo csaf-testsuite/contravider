@@ -1,4 +1,3 @@
-<!--
 // This file is Free Software under the Apache-2.0 License
 // without warranty, see README.md and LICENSE for details.
 //
@@ -8,7 +7,3 @@
 // Software-Engineering:
 // * 2025 Intevation GmbH <https://intevation.de>
 // * 2025 Fraunhofer Institute for Applied an Integrated Security (AISEC) <https://aisec.fraunhofer.de>
--->
-
-# contravider
-Contains the implementation of the "bad provider".
