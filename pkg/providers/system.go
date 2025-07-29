@@ -17,6 +17,7 @@ type System struct {
 
 // NewSystem create a new System.
 func NewSystem(cfg *config.Config) (*System, error) {
+	//TODO: Initial checkout/considtency check
 	return &System{
 		cfg: cfg,
 		fns: make(chan func(*System)),
@@ -43,6 +44,10 @@ func (s *System) Kill() {
 func (s *System) serve(profile string) error {
 	//TODO: Implement me!
 	_ = profile
+	// Check if profile already exists (git worktree branch).
+	// If not create it (merge branches in new branch).
+	// If it exists check its up-to-date. Hash of revisions (git describe).
+	// Create copy with templating.
 	return errors.New("not implemented, yet")
 }
 
