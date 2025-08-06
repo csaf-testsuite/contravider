@@ -47,8 +47,8 @@ type Web struct {
 }
 
 type Providers struct {
-	GitURL   string              `toml:"git_url"`
-	Profiles map[string][]string `toml:"profiles"`
+	GitURL   string   `toml:"git_url"`
+	Profiles Profiles `toml:"profiles"`
 }
 
 // Config are all the configuration options.
