@@ -12,6 +12,7 @@ package config
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 )
 
@@ -86,4 +87,21 @@ func (p Profiles) check() error {
 		}
 	}
 	return nil
+}
+
+// Branches returns the branches for a given profile.
+func (p Profiles) Branches(name string) []string {
+	var branches []string
+	var collect func(name string)
+	collect = func(name string) {
+		for _, branch := range p[name] {
+			if strings.HasPrefix(branch, "#") {
+				collect(branch[1:])
+			} else if !slices.Contains(branches, branch) {
+				branches = append(branches, branch)
+			}
+		}
+	}
+	collect(name)
+	return branches
 }
