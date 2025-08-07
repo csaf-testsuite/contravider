@@ -1,3 +1,14 @@
+// This file is Free Software under the Apache-2.0 License
+// without warranty, see README.md and LICENSE for details.
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+// SPDX-FileCopyrightText: 2025 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
+// Software-Engineering:
+// * 2025 Intevation GmbH <https://intevation.de>
+// * 2025 Fraunhofer Institute for Applied an Integrated Security (AISEC) <https://aisec.fraunhofer.de>
+
+// Package web contains the web controller logic.
 package web
 
 import (
@@ -13,22 +24,6 @@ import (
 type Controller struct {
 	cfg   *config.Config
 	tmpls *template.Template
-}
-
-type templateData map[string]any
-
-func (td templateData) error(msg string) {
-	if v, ok := td["error"]; ok {
-		if m, ok := v.(string); ok {
-			msg = m + " " + msg
-		}
-	}
-	td["Error"] = msg
-}
-
-func (td templateData) hasError() bool {
-	_, ok := td["Error"]
-	return ok
 }
 
 // templateFuncs are the functions usable in the templates.
