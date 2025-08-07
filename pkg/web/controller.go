@@ -8,6 +8,7 @@
 // * 2025 Intevation GmbH <https://intevation.de>
 // * 2025 Fraunhofer Institute for Applied an Integrated Security (AISEC) <https://aisec.fraunhofer.de>
 
+// Package web contains the web controller logic.
 package web
 
 import (

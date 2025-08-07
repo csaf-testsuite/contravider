@@ -8,6 +8,7 @@
 // * 2025 Intevation GmbH <https://intevation.de>
 // * 2025 Fraunhofer Institute for Applied an Integrated Security (AISEC) <https://aisec.fraunhofer.de>
 
+// Package version holds the version information.
 package version
 
 // SemVersion the version in semver.org format, MUST be overwritten during

@@ -8,6 +8,7 @@
 // * 2025 Intevation GmbH <https://intevation.de>
 // * 2025 Fraunhofer Institute for Applied an Integrated Security (AISEC) <https://aisec.fraunhofer.de>
 
+// Package config contains the configuration of the contravider.
 package config
 
 import (
