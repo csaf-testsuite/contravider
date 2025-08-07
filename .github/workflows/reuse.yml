@@ -8,24 +8,14 @@
 # * 2025 Intevation GmbH <https://intevation.de>
 # * 2025 Fraunhofer Institute for Applied an Integrated Security (AISEC) <https://aisec.fraunhofer.de>
 
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
+name: REUSE Compliance Check
 
-# Test binary, built with `go test -c`
-*.test
+on: [push, pull_request]
 
-# Output of the go coverage tool, specifically when used with LiteIDE
-*.out
-
-# Dependency directories (remove the comment below to include it)
-# vendor/
-
-# Go workspace file
-go.work
-go.work.sum
-
-# env file
-.env
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: REUSE Compliance Check
+        uses: fsfe/reuse-action@v4
