@@ -1,3 +1,0 @@
-2020/green_1.json
-2019/green_2.json
-2018/green_3.json

@@ -1,3 +1,0 @@
-2020/red_1.json
-2019/red_2.json
-2018/red_3.json

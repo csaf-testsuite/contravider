@@ -1,3 +1,0 @@
-2020/white_1.json
-2019/white_2.json
-2018/white_3.json
