@@ -8,6 +8,7 @@
 // * 2025 Intevation GmbH <https://intevation.de>
 // * 2025 Fraunhofer Institute for Applied an Integrated Security (AISEC) <https://aisec.fraunhofer.de>
 
+// Package web contains the web controller logic.
 package web
 
 import (
@@ -25,22 +26,6 @@ type Controller struct {
 	cfg   *config.Config
 	sys   *providers.System
 	tmpls *template.Template
-}
-
-type templateData map[string]any
-
-func (td templateData) error(msg string) {
-	if v, ok := td["error"]; ok {
-		if m, ok := v.(string); ok {
-			msg = m + " " + msg
-		}
-	}
-	td["Error"] = msg
-}
-
-func (td templateData) hasError() bool {
-	_, ok := td["Error"]
-	return ok
 }
 
 // templateFuncs are the functions usable in the templates.
