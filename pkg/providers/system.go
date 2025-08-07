@@ -19,6 +19,8 @@ import (
 	"github.com/csaf-testsuite/contravider/pkg/config"
 )
 
+// System manages the sync between the git repo, the local checkouts
+// and the served providers.
 type System struct {
 	cfg  *config.Config
 	done bool

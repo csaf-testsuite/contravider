@@ -57,6 +57,7 @@ type Web struct {
 	Password string `toml:"password"`
 }
 
+// Providers are the config options for the served provider profiles.
 type Providers struct {
 	GitURL   string   `toml:"git_url"`
 	Profiles Profiles `toml:"profiles"`

@@ -89,19 +89,32 @@ func (p Profiles) check() error {
 	return nil
 }
 
-// Branches returns the branches for a given profile.
-func (p Profiles) Branches(name string) []string {
-	var branches []string
-	var collect func(name string)
-	collect = func(name string) {
-		for _, branch := range p[name] {
+func (p Profiles) collectBranches(all, branches []string) []string {
+	var collect func(branches []string)
+	collect = func(branches []string) {
+		for _, branch := range branches {
 			if strings.HasPrefix(branch, "#") {
-				collect(branch[1:])
-			} else if !slices.Contains(branches, branch) {
-				branches = append(branches, branch)
+				collect(p[branch[1:]])
+			} else if !slices.Contains(all, branch) {
+				all = append(all, branch)
 			}
 		}
 	}
-	collect(name)
-	return branches
+	collect(branches)
+	return all
+}
+
+// Branches returns the branches for a given profile.
+func (p Profiles) Branches(name string) []string {
+	return p.collectBranches(nil, p[name])
+}
+
+// AllBranches returns a list of all branches which are relevant for the contravider.
+func (p Profiles) AllBranches() []string {
+	var all []string
+	for _, branches := range p {
+		all = p.collectBranches(all, branches)
+	}
+	slices.Sort(all) // to make it deterimistic.
+	return all
 }
