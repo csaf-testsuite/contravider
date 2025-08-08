@@ -37,7 +37,8 @@ const (
 )
 
 const (
-	defaultProvidersGitURL = "https://github.com/csaf-testsuite/distribution.git"
+	defaultProvidersGitURL  = "https://github.com/csaf-testsuite/distribution.git"
+	defaultProvidersWorkDir = "."
 )
 
 // Log are the config options for the logging.
@@ -61,6 +62,7 @@ type Web struct {
 type Providers struct {
 	GitURL   string   `toml:"git_url"`
 	Profiles Profiles `toml:"profiles"`
+	WorkDir  string   `toml:"workdir"`
 }
 
 // Config are all the configuration options.
@@ -96,7 +98,8 @@ func Load(file string) (*Config, error) {
 			MaxAge: defaultSessionMaxAge,
 		},
 		Providers: Providers{
-			GitURL: defaultProvidersGitURL,
+			GitURL:  defaultProvidersGitURL,
+			WorkDir: defaultProvidersWorkDir,
 		},
 	}
 	if file != "" {

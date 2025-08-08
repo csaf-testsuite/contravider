@@ -29,7 +29,13 @@ type System struct {
 
 // NewSystem create a new System.
 func NewSystem(cfg *config.Config) (*System, error) {
-	//TODO: Initial checkout/considtency check
+	if err := initialCheckout(
+		cfg.Providers.GitURL,
+		cfg.Providers.WorkDir,
+		cfg.Providers.Profiles.AllBranches(),
+	); err != nil {
+		return nil, fmt.Errorf("initial checkout failed %w", err)
+	}
 	return &System{
 		cfg: cfg,
 		fns: make(chan func(*System)),
