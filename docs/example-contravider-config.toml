@@ -22,3 +22,6 @@
 #root = "web"
 username = "alice"
 password = "secret"
+
+[providers]
+profiles = { index_txt = ["main", "7.1.12_Requirement_12_index.txt"], changes_csv = ["main", "7.1.13_Requirement_13_changes.csv" ] }
