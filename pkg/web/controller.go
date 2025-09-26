@@ -18,6 +18,7 @@ import (
 	"text/template"
 
 	"github.com/csaf-testsuite/contravider/pkg/config"
+	"github.com/csaf-testsuite/contravider/pkg/middleware"
 )
 
 // Controller binds the endpoints to the internal logic.
@@ -46,27 +47,13 @@ func NewController(
 	}, nil
 }
 
-// requireAuth enforces HTTP Basic Auth for protected paths
-func (c *Controller) requireAuth(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user, pass, ok := r.BasicAuth()
-		if !ok || !c.validate(user, pass) {
-			w.Header().Set("WWW-Authenticate", `Basic realm="restricted"`)
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
-		// Credentials are valid → continue.
-		next.ServeHTTP(w, r)
-	})
-}
-
 // validate checks the supplied credentials.
 // Replace this with a real lookup (config file, DB, etc.).
 func (c *Controller) validate(user, pass string) bool {
 	return user == c.cfg.Web.Username && pass == c.cfg.Web.Password
 }
 
-// Bind return a http handler to be used in a web server.
+// Bind returns an http.Handler to be used in a web server.
 func (c *Controller) Bind() http.Handler {
 	router := http.NewServeMux()
 
@@ -88,16 +75,19 @@ func (c *Controller) Bind() http.Handler {
 		router.HandleFunc(route.pattern, route.handler)
 	}
 
-	// public folder
+	// public folders
 	white := http.FileServer(http.Dir(c.cfg.Web.Root))
 	router.Handle("/.well-known/csaf/white/", white)
 
 	green := http.FileServer(http.Dir(c.cfg.Web.Root))
 	router.Handle("/.well-known/csaf/green/", green)
 
-	// protected folder
-	router.Handle("/.well-known/csaf/amber/", c.requireAuth(http.FileServer(http.Dir(c.cfg.Web.Root))))
+	// protected folders using RequireAuth middleware.
+	router.Handle("/.well-known/csaf/amber/", middleware.BasicAuth(http.FileServer(http.Dir(c.cfg.Web.Root)), c.validate))
+	router.Handle("/.well-known/csaf/red/", middleware.BasicAuth(http.FileServer(http.Dir(c.cfg.Web.Root)), c.validate))
 
-	router.Handle("/.well-known/csaf/red/", c.requireAuth(http.FileServer(http.Dir(c.cfg.Web.Root))))
-	return router
+	// Wrap the router with middleware that adds headers and intercepts status codes.
+	finalHandler := middleware.AddCustomHeader(router)
+
+	return finalHandler
 }
