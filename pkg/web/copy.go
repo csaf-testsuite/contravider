@@ -17,17 +17,9 @@ import (
 	"path/filepath"
 )
 
-// TemplateData holds all the values for the placeholders
-// ToDo: Collect all fields
-type TemplateData struct {
-	DirectoryURL         string
-	RolieFeedURL         string
-	ServiceCollectionURL string
-}
-
 // CopyDirectory copies all files from the input directory inputDir and all files in all subfolders
 // into the output directory outputDir using the Walk function while executing the templates.
-func (c *Controller) copyDirectory(inputDir string, outputDir string, data TemplateData) error {
+func (c *Controller) copyDirectory(inputDir string, outputDir string, data any) error {
 
 	err := filepath.Walk(inputDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
