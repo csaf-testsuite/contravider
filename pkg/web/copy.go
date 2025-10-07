@@ -20,7 +20,11 @@ import (
 // TemplateData is a collection of strings which need to
 // be defined when building the system
 type TemplateData struct {
+	CanonicalURL          string
 	DirectoryURL          string
+	DistributionURL       string
+	FeedURL               string
+	PublicOpenPGPKeyURL   string
 	RolieFeedURL          string
 	ServiceCollectionURL  string
 	PublisherNamespaceURL string
