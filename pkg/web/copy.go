@@ -17,9 +17,18 @@ import (
 	"path/filepath"
 )
 
+// TemplateData is a collection of strings which need to
+// be defined when building the system
+type TemplateData struct {
+	DirectoryURL          string
+	RolieFeedURL          string
+	ServiceCollectionURL  string
+	PublisherNamespaceURL string
+}
+
 // CopyDirectory copies all files from the input directory inputDir and all files in all subfolders
 // into the output directory outputDir using the Walk function while executing the templates.
-func (c *Controller) copyDirectory(inputDir string, outputDir string, data any) error {
+func (c *Controller) copyDirectory(inputDir string, outputDir string, data TemplateData) error {
 
 	err := filepath.Walk(inputDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
