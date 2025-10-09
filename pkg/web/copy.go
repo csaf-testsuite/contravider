@@ -12,9 +12,12 @@
 package web
 
 import (
+	"errors"
+	"fmt"
 	"html/template"
 	"os"
 	"path/filepath"
+	"regexp"
 )
 
 // TemplateData is a collection of strings which need to
@@ -86,4 +89,52 @@ func (c *Controller) copyDirectory(inputDir string, outputDir string, data Templ
 	})
 	// for error handling
 	return err
+}
+
+type (
+	Action        func(path string, info os.FileInfo) error
+	PatternAction struct {
+		Pattern *regexp.Regexp
+		Actions []Action
+	}
+	PatternActions []PatternAction
+)
+
+func hashMe(path string, info os.FileInfo) error {
+	// TODO: Implement me!
+	_, _ = path, info
+	return errors.New("implement me")
+}
+
+var patternActions = PatternActions{
+	{regexp.MustCompile(`.json$`), []Action{hashMe /*, signMe */}},
+	// ...
+}
+
+func (pa PatternActions) Apply(inputDir string) error {
+
+	return filepath.Walk(inputDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		// Directories are created as necessary later,
+		// so no need to create explicitely possible unused directories via walk.
+		if info.IsDir() {
+			return nil
+		}
+
+		fname := info.Name()
+
+		for _, p := range pa {
+			if p.Pattern.MatchString(fname) {
+				for _, action := range p.Actions {
+					if err := action(path, info); err != nil {
+						return fmt.Errorf("apply pattern %q failed: %w", p.Pattern, err)
+					}
+				}
+			}
+		}
+
+		return nil
+	})
 }
