@@ -34,7 +34,7 @@ func prepareKeyRing(armoredPrivateKeyPath string, passphrase string) (*crypto.Ke
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse private key: %w", err)
 	}
-
+	// ToDo: Evaluate: Locking even worth it?
 	unlockedKeyObj, err := privateKeyObj.Unlock([]byte(passphrase))
 	if err != nil {
 		return nil, fmt.Errorf("failed to unlock private key: %w", err)
@@ -144,9 +144,11 @@ func signAndHash(file string, signingKeyRing *crypto.KeyRing) error {
 			return fmt.Errorf("failed to sign file: %w", err)
 		}
 	}
+	shouldCreate256 := checkFileNotExists(fileHash256)
+	shouldCreate512 := checkFileNotExists(fileHash512)
 
 	// write Hashes
-	if err := writeFileHashes(file, checkFileNotExists(fileHash256), checkFileNotExists(fileHash512)); err != nil {
+	if err := writeFileHashes(file, shouldCreate256, shouldCreate512); err != nil {
 		return fmt.Errorf("failed to write Hashes: %w", err)
 	}
 	return nil
@@ -173,6 +175,7 @@ func signAndHashWalk(inputDir string, exceptions []string, privateKeyPath string
 			return nil
 		}
 		if strings.HasSuffix(strings.ToLower(info.Name()), ".json") {
+			// ToDo: Slices.Contains
 			for _, exception := range exceptions {
 				if info.Name() == exception {
 					return nil
