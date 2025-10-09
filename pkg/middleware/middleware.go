@@ -22,15 +22,6 @@ type CustomResponseWriter struct {
 	StatusCode int
 }
 
-// WriteHeader intercepts the status code. If a 200 is written, changes it to 202.
-func (w *CustomResponseWriter) WriteHeader(code int) {
-	if code == http.StatusOK {
-		code = http.StatusAccepted
-	}
-	w.StatusCode = code
-	w.ResponseWriter.WriteHeader(code)
-}
-
 // BasicAuth enforces HTTP Basic Auth for protected paths
 // The validate function should check the credentials (for example, using configuration values).
 func BasicAuth(next http.Handler, validate func(user, pass string) bool) http.Handler {
