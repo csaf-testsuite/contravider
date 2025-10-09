@@ -12,8 +12,8 @@
 package web
 
 import (
-	"errors"
 	"fmt"
+	"github.com/ProtonMail/gopenpgp/v2/crypto"
 	"html/template"
 	"os"
 	"path/filepath"
@@ -35,7 +35,7 @@ type TemplateData struct {
 
 // CopyDirectory copies all files from the input directory inputDir and all files in all subfolders
 // into the output directory outputDir using the Walk function while executing the templates.
-func (c *Controller) copyDirectory(inputDir string, outputDir string, data TemplateData) error {
+func copyDirectory(inputDir string, outputDir string, data TemplateData) error {
 
 	err := filepath.Walk(inputDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -92,25 +92,26 @@ func (c *Controller) copyDirectory(inputDir string, outputDir string, data Templ
 }
 
 type (
-	Action        func(path string, info os.FileInfo) error
+	// Action are functions to be applied to files fitting a regex.
+	Action func(path string, info os.FileInfo) error
+	// PatternAction describe which functions are applied on which regex.
 	PatternAction struct {
 		Pattern *regexp.Regexp
 		Actions []Action
 	}
+	// PatternActions is a slice of PatternAction.
 	PatternActions []PatternAction
 )
 
-func hashMe(path string, info os.FileInfo) error {
-	// TODO: Implement me!
-	_, _ = path, info
-	return errors.New("implement me")
+// buildPatternActions builds a PatternActions slice allowing to
+// insert additional info if necessary.
+func buildPatternActions(signingKeyRing *crypto.KeyRing) PatternActions {
+	return PatternActions{
+		{regexp.MustCompile(`.json$`), []Action{hashFile, encloseSignFile(signingKeyRing)}},
+	}
 }
 
-var patternActions = PatternActions{
-	{regexp.MustCompile(`.json$`), []Action{hashMe /*, signMe */}},
-	// ...
-}
-
+// Apply walks through a given directory and applies all Actions as defined in PatternAction
 func (pa PatternActions) Apply(inputDir string) error {
 
 	return filepath.Walk(inputDir, func(path string, info os.FileInfo, err error) error {

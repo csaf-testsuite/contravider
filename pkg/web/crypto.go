@@ -20,7 +20,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
 // prepareKeyRing unlocks and returns a reusable KeyRing for signing.
@@ -131,19 +130,30 @@ func writeFileHashes(filePath string, writeSha256 bool, writeSha512 bool) error 
 	return nil
 }
 
-// signAndHash checks whether a file needs to be signed or hashes and then signs or hashes it
-func signAndHash(file string, signingKeyRing *crypto.KeyRing) error {
+// encloseSignFile creates an action that signs a file with a keyring parameter
+func encloseSignFile(signingKeyRing *crypto.KeyRing) Action {
+	return func(file string, info os.FileInfo) error {
+		// the files to be checked and created
+		fileSignature := file + ".asc"
+
+		// write Signature if it doesn't exist
+		if checkFileNotExists(fileSignature) {
+			if err := signFileWithKeyRing(file, signingKeyRing); err != nil {
+				return fmt.Errorf("failed to sign file: %w", err)
+			}
+		}
+		return nil
+	}
+}
+
+// hashFile checks whether a file needs to be hashed and then hashes it
+func hashFile(file string, info os.FileInfo) error {
+	// Not needed but required
+	_ = info
 	// the files to be checked and created
-	fileSignature := file + ".asc"
 	fileHash256 := file + ".sha256"
 	fileHash512 := file + ".sha512"
 
-	// write Signature if it doesn't exist
-	if checkFileNotExists(fileSignature) {
-		if err := signFileWithKeyRing(file, signingKeyRing); err != nil {
-			return fmt.Errorf("failed to sign file: %w", err)
-		}
-	}
 	shouldCreate256 := checkFileNotExists(fileHash256)
 	shouldCreate512 := checkFileNotExists(fileHash512)
 
@@ -158,31 +168,4 @@ func signAndHash(file string, signingKeyRing *crypto.KeyRing) error {
 func checkFileNotExists(filePath string) bool {
 	_, error := os.Stat(filePath)
 	return errors.Is(error, os.ErrNotExist)
-}
-
-// signAndHashWalk walks from a starting directory and signs and hashes all json files
-// except for those given in a list of exceptions
-func signAndHashWalk(inputDir string, exceptions []string, privateKeyPath string, privateKeyPassword string) error {
-	signKey, err := prepareKeyRing(privateKeyPath, privateKeyPassword)
-	if err != nil {
-		return fmt.Errorf("failed to unlock privatekey: %w", err)
-	}
-	return filepath.Walk(inputDir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if info.IsDir() {
-			return nil
-		}
-		if strings.HasSuffix(strings.ToLower(info.Name()), ".json") {
-			// ToDo: Slices.Contains
-			for _, exception := range exceptions {
-				if info.Name() == exception {
-					return nil
-				}
-			}
-			return signAndHash(path, signKey)
-		}
-		return nil
-	})
 }
