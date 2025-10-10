@@ -8,16 +8,16 @@
 // * 2025 Intevation GmbH <https://intevation.de>
 // * 2025 Fraunhofer Institute for Applied an Integrated Security (AISEC) <https://aisec.fraunhofer.de>
 
-// Package web contains the web controller logic.
-package web
+package providers
 
 import (
 	"fmt"
-	"github.com/ProtonMail/gopenpgp/v2/crypto"
 	"html/template"
 	"os"
 	"path/filepath"
 	"regexp"
+
+	"github.com/ProtonMail/gopenpgp/v2/crypto"
 )
 
 // TemplateData is a collection of strings which need to
