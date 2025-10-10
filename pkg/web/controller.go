@@ -56,6 +56,7 @@ func (c *Controller) validate(user, pass string) bool {
 // Bind returns an http.Handler to be used in a web server.
 func (c *Controller) Bind() http.Handler {
 	router := http.NewServeMux()
+	mw := middleware.NewMiddleware(c.cfg)
 
 	for _, route := range []struct {
 		pattern string
@@ -83,11 +84,11 @@ func (c *Controller) Bind() http.Handler {
 	router.Handle("/.well-known/csaf/green/", green)
 
 	// protected folders using RequireAuth middleware.
-	router.Handle("/.well-known/csaf/amber/", middleware.BasicAuth(http.FileServer(http.Dir(c.cfg.Web.Root)), c.validate))
-	router.Handle("/.well-known/csaf/red/", middleware.BasicAuth(http.FileServer(http.Dir(c.cfg.Web.Root)), c.validate))
+	router.Handle("/.well-known/csaf/amber/", mw.BasicAuth(http.FileServer(http.Dir(c.cfg.Web.Root)), c.validate))
+	router.Handle("/.well-known/csaf/red/", mw.BasicAuth(http.FileServer(http.Dir(c.cfg.Web.Root)), c.validate))
 
-	// Wrap the router with middleware that adds headers and intercepts status codes.
-	finalHandler := middleware.AddCustomHeader(router)
+	// // Add custom headers
+	// handler := mw.AddCustomHeader(router)
 
-	return finalHandler
+	return router
 }

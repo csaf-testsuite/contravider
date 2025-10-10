@@ -14,17 +14,30 @@ package middleware
 
 import (
 	"net/http"
+
+	"github.com/csaf-testsuite/contravider/pkg/config"
 )
 
-// CustomResponseWriter wraps http.ResponseWriter to intercept status codes.
-type CustomResponseWriter struct {
-	http.ResponseWriter
-	StatusCode int
+// Middleware
+type Middleware struct {
+	cfg *config.Config
+}
+
+// // CustomResponseWriter wraps http.ResponseWriter to intercept status codes.
+// type CustomResponseWriter struct {
+// 	http.ResponseWriter
+// 	StatusCode int
+// }
+
+func NewMiddleware(cfg *config.Config) *Middleware {
+	return &Middleware{
+		cfg: cfg,
+	}
 }
 
 // BasicAuth enforces HTTP Basic Auth for protected paths
 // The validate function should check the credentials (for example, using configuration values).
-func BasicAuth(next http.Handler, validate func(user, pass string) bool) http.Handler {
+func (mw *Middleware) BasicAuth(next http.Handler, validate func(user, pass string) bool) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, pass, ok := r.BasicAuth()
 		if !ok || !validate(user, pass) {
@@ -37,11 +50,12 @@ func BasicAuth(next http.Handler, validate func(user, pass string) bool) http.Ha
 	})
 }
 
-// AddCustomHeader adds custom headers and wraps the ResponseWriter.
-func AddCustomHeader(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("X-Middleware", "applied")
-		crw := &CustomResponseWriter{ResponseWriter: w, StatusCode: http.StatusOK}
-		next.ServeHTTP(crw, r)
-	})
-}
+// TODO(all): Do we need some custom headers?
+// // AddCustomHeader adds custom headers and wraps the ResponseWriter.
+// func (mw *Middleware) AddCustomHeader(next http.Handler) http.Handler {
+// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+// 		w.Header().Set("X-Middleware", "applied")
+// 		crw := &CustomResponseWriter{ResponseWriter: w, StatusCode: http.StatusOK}
+// 		next.ServeHTTP(crw, r)
+// 	})
+// }
