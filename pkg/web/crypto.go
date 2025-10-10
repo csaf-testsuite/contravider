@@ -16,10 +16,11 @@ import (
 	"crypto/sha512"
 	"errors"
 	"fmt"
-	"github.com/ProtonMail/gopenpgp/v2/crypto"
 	"io"
 	"os"
 	"path/filepath"
+
+	"github.com/ProtonMail/gopenpgp/v2/crypto"
 )
 
 // prepareKeyRing unlocks and returns a reusable KeyRing for signing.
@@ -84,33 +85,32 @@ func writeHashtoFile(fname, name string, hash []byte) error {
 
 // writeFileHashes computes hashes for an existing file and writes them.
 func writeFileHashes(filePath string, writeSha256 bool, writeSha512 bool) error {
-	f, err := os.Open(filePath)
-	if err != nil {
-		return fmt.Errorf("failed to open %s: %w", filePath, err)
-	}
 
-	defer f.Close()
-
-	// Prepare hashers
-	var writers []io.Writer
-	s256 := sha256.New()
-	s512 := sha512.New()
-
-	if writeSha256 {
-		writers = append(writers, s256)
-	}
-	if writeSha512 {
-		writers = append(writers, s512)
-	}
-
-	if len(writers) == 0 {
+	if !writeSha256 && !writeSha512 {
 		// both hashes exist already -> write nothing
 		return nil
 	}
 
+	f, err := os.Open(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to open %s: %w", filePath, err)
+	}
+	defer f.Close()
+
+	// Prepare hashers
+	var hashers []io.Writer
+	s256 := sha256.New()
+	s512 := sha512.New()
+
+	if writeSha256 {
+		hashers = append(hashers, s256)
+	}
+	if writeSha512 {
+		hashers = append(hashers, s512)
+	}
+
 	// Copy file into the selected hashers.
-	hasher := io.MultiWriter(writers...)
-	if _, err := io.Copy(hasher, f); err != nil {
+	if _, err := io.Copy(io.MultiWriter(hashers...), f); err != nil {
 		return fmt.Errorf("failed to copy file to hashers: %w", err)
 	}
 
@@ -130,12 +130,11 @@ func writeFileHashes(filePath string, writeSha256 bool, writeSha512 bool) error 
 	return nil
 }
 
-// encloseSignFile creates an action that signs a file with a keyring parameter
+// encloseSignFile creates an action that signs a file with a keyring parameter.
 func encloseSignFile(signingKeyRing *crypto.KeyRing) Action {
-	return func(file string, info os.FileInfo) error {
+	return func(file string, _ os.FileInfo) error {
 		// the files to be checked and created
 		fileSignature := file + ".asc"
-
 		// write Signature if it doesn't exist
 		if checkFileNotExists(fileSignature) {
 			if err := signFileWithKeyRing(file, signingKeyRing); err != nil {
@@ -146,10 +145,8 @@ func encloseSignFile(signingKeyRing *crypto.KeyRing) Action {
 	}
 }
 
-// hashFile checks whether a file needs to be hashed and then hashes it
-func hashFile(file string, info os.FileInfo) error {
-	// Not needed but required
-	_ = info
+// hashFile checks whether a file needs to be hashed and then hashes it.
+func hashFile(file string, _ os.FileInfo) error {
 	// the files to be checked and created
 	fileHash256 := file + ".sha256"
 	fileHash512 := file + ".sha512"
@@ -164,8 +161,8 @@ func hashFile(file string, info os.FileInfo) error {
 	return nil
 }
 
-// checkFileExists returns whether a file does not exist
+// checkFileExists returns whether a file does not exist.
 func checkFileNotExists(filePath string) bool {
-	_, error := os.Stat(filePath)
-	return errors.Is(error, os.ErrNotExist)
+	_, err := os.Stat(filePath)
+	return errors.Is(err, os.ErrNotExist)
 }
