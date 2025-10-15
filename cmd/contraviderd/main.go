@@ -123,6 +123,5 @@ func main() {
 	cfg, err := config.Load(cfgFile)
 	check(err)
 	check(cfg.Log.Config())
-	cfg.PresetDefaults()
 	check(run(cfg))
 }

@@ -69,7 +69,6 @@ type Providers struct {
 type Config struct {
 	Log       Log       `toml:"log"`
 	Web       Web       `toml:"web"`
-	Sessions  Sessions  `toml:"sessions"`
 	Providers Providers `toml:"providers"`
 }
 
@@ -93,10 +92,6 @@ func Load(file string) (*Config, error) {
 			Port: defaultWebPort,
 			Root: defaultWebRoot,
 		},
-		Sessions: Sessions{
-			Secret: nil,
-			MaxAge: defaultSessionMaxAge,
-		},
 		Providers: Providers{
 			GitURL:  defaultProvidersGitURL,
 			WorkDir: defaultProvidersWorkDir,
@@ -116,11 +111,6 @@ func Load(file string) (*Config, error) {
 		return nil, err
 	}
 	return cfg, nil
-}
-
-// PresetDefaults initializes unset values.
-func (cfg *Config) PresetDefaults() {
-	cfg.Sessions.presetDefaults()
 }
 
 func (cfg *Config) fillFromEnv() error {
