@@ -60,8 +60,11 @@ func (s *System) Kill() {
 }
 
 func (s *System) serve(profile string) error {
+	branches := s.cfg.Providers.Profiles[profile]
+	if len(branches) == 0 {
+		return fmt.Errorf("no such profile: %q", profile)
+	}
 	//TODO: Implement me!
-	_ = profile
 	// Check if profile already exists (git worktree branch).
 	// If not create it (merge branches in new branch).
 	// If it exists check its up-to-date. Hash of revisions (git describe).

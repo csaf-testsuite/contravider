@@ -21,7 +21,7 @@ import (
 )
 
 // DefaultConfigFile is the name of the default config file.
-const DefaultConfigFile = "docs/example-contravider-config.toml"
+const DefaultConfigFile = "contraviderd.toml"
 
 const (
 	defaultLogFile   = "contravider.log"
