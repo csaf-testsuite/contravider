@@ -26,6 +26,7 @@ import (
 	"syscall"
 
 	"github.com/csaf-testsuite/contravider/pkg/config"
+	"github.com/csaf-testsuite/contravider/pkg/providers"
 	"github.com/csaf-testsuite/contravider/pkg/version"
 	"github.com/csaf-testsuite/contravider/pkg/web"
 )
@@ -43,7 +44,13 @@ func run(cfg *config.Config) error {
 	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGKILL, syscall.SIGTERM)
 	defer stop()
 
-	ctrl, err := web.NewController(cfg)
+	sys, err := providers.NewSystem(cfg)
+	if err != nil {
+		return fmt.Errorf("booting system failed: %w", err)
+	}
+	go sys.Run(ctx)
+
+	ctrl, err := web.NewController(cfg, sys)
 	if err != nil {
 		return err
 	}
@@ -116,6 +123,5 @@ func main() {
 	cfg, err := config.Load(cfgFile)
 	check(err)
 	check(cfg.Log.Config())
-	cfg.PresetDefaults()
 	check(run(cfg))
 }
