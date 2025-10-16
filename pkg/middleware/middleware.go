@@ -18,7 +18,7 @@ import (
 	"github.com/csaf-testsuite/contravider/pkg/config"
 )
 
-// Middleware
+// Middleware contains the config information
 type Middleware struct {
 	cfg *config.Config
 }
@@ -29,6 +29,7 @@ type Middleware struct {
 // 	StatusCode int
 // }
 
+// NewMiddleware returns a new middleware.
 func NewMiddleware(cfg *config.Config) *Middleware {
 	return &Middleware{
 		cfg: cfg,
