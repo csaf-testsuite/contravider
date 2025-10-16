@@ -16,6 +16,7 @@ import (
 	"path/filepath"
 
 	"github.com/csaf-testsuite/contravider/pkg/config"
+	"github.com/csaf-testsuite/contravider/pkg/middleware"
 	"github.com/csaf-testsuite/contravider/pkg/providers"
 )
 
@@ -36,58 +37,64 @@ func NewController(
 	}, nil
 }
 
-// requireAuth enforces HTTP Basic Auth for protected paths
-func (c *Controller) requireAuth(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user, pass, ok := r.BasicAuth()
-		if !ok || !c.validate(user, pass) {
-			w.Header().Set("WWW-Authenticate", `Basic realm="restricted"`)
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
-		// Credentials are valid → continue.
-		next.ServeHTTP(w, r)
-	})
-}
-
 // validate checks the supplied credentials.
 // Replace this with a real lookup (config file, DB, etc.).
 func (c *Controller) validate(user, pass string) bool {
 	return user == c.cfg.Web.Username && pass == c.cfg.Web.Password
 }
 
-// Bind return a http handler to be used in a web server.
+// Bind returns an http.Handler to be used in a web server.
 func (c *Controller) Bind() http.Handler {
 	router := http.NewServeMux()
+	mw := middleware.NewMiddleware(c.cfg)
 
 	for _, route := range []struct {
 		pattern string
-		handler http.HandlerFunc
+		handler http.Handler
 	}{
 		// public files
-		{"/.well-known/csaf/provider-metadata.json", func(w http.ResponseWriter, r *http.Request) {
-			http.ServeFile(w, r, filepath.Join(c.cfg.Web.Root, r.URL.Path[1:]))
-		}},
-		{"/.well-known/csaf/service.json", func(w http.ResponseWriter, r *http.Request) {
-			http.ServeFile(w, r, filepath.Join(c.cfg.Web.Root, r.URL.Path[1:]))
-		}},
-		{"/.well-known/security.txt", func(w http.ResponseWriter, r *http.Request) {
-			http.ServeFile(w, r, filepath.Join(c.cfg.Web.Root, r.URL.Path[1:]))
-		}},
+		{"/.well-known/csaf/provider-metadata.json",
+			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				http.ServeFile(w, r, filepath.Join(c.cfg.Web.Root, r.URL.Path[1:]))
+			}),
+		},
+		{"/.well-known/csaf/service.json",
+			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				http.ServeFile(w, r, filepath.Join(c.cfg.Web.Root, r.URL.Path[1:]))
+			}),
+		},
+		{"/.well-known/security.txt",
+			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				http.ServeFile(w, r, filepath.Join(c.cfg.Web.Root, r.URL.Path[1:]))
+			}),
+		},
+		// public folders
+		{
+			"/.well-known/csaf/white/",
+			http.StripPrefix("/.well-known/csaf/white/", http.FileServer(http.Dir(c.cfg.Web.Root))),
+		},
+		{
+			"/.well-known/csaf/green/",
+			http.StripPrefix("/.well-known/csaf/green/", http.FileServer(http.Dir(c.cfg.Web.Root))),
+		},
+		// protected folders using basic auth (middleware)
+		{
+			"/.well-known/csaf/amber/",
+			mw.BasicAuth(
+				http.FileServer(http.Dir(c.cfg.Web.Root)),
+				c.validate,
+			),
+		},
+		{
+			"/.well-known/csaf/red/",
+			mw.BasicAuth(
+				http.FileServer(http.Dir(c.cfg.Web.Root)),
+				c.validate,
+			),
+		},
 	} {
-		router.HandleFunc(route.pattern, route.handler)
+		router.Handle(route.pattern, route.handler)
 	}
 
-	// public folder
-	white := http.FileServer(http.Dir(c.cfg.Web.Root))
-	router.Handle("/.well-known/csaf/white/", white)
-
-	green := http.FileServer(http.Dir(c.cfg.Web.Root))
-	router.Handle("/.well-known/csaf/green/", green)
-
-	// protected folder
-	router.Handle("/.well-known/csaf/amber/", c.requireAuth(http.FileServer(http.Dir(c.cfg.Web.Root))))
-
-	router.Handle("/.well-known/csaf/red/", c.requireAuth(http.FileServer(http.Dir(c.cfg.Web.Root))))
 	return router
 }
