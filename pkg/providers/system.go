@@ -64,12 +64,16 @@ func (s *System) serve(profile string) error {
 	if len(branches) == 0 {
 		return fmt.Errorf("no such profile: %q", profile)
 	}
-	//TODO: Implement me!
-	// Check if profile already exists (git worktree branch).
-	// If not create it (merge branches in new branch).
-	// If it exists check its up-to-date. Hash of revisions (git describe).
-	// Create copy with templating.
-	return errors.New("not implemented, yet")
+	result := make(chan error)
+	s.fns <- func(s *System) {
+		//TODO: Implement me!
+		// Check if profile already exists (git worktree branch).
+		// If not create it (merge branches in new branch).
+		// If it exists check its up-to-date. Hash of revisions (git describe).
+		// Create copy with templating.
+		result <- errors.New("not implemented, yet")
+	}
+	return <-result
 }
 
 // Serve prepares the serving of a given profile.

@@ -17,6 +17,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 func initialCheckout(url, workdir string, branches []string) error {
@@ -92,4 +93,17 @@ func initialCheckout(url, workdir string, branches []string) error {
 	}
 
 	return nil
+}
+
+// currentRevision returns the current revision of a checked out branch.
+func currentRevision(path string) (string, error) {
+	cmd := exec.Command("git", "rev-parse", "HEAD")
+	cmd.Dir = path
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		slog.Error("git rev-parse failed", "msg", output, "err", err)
+		return "", fmt.Errorf("git rev-parse failed: %w", err)
+	}
+	rev := strings.TrimSpace(string(output))
+	return rev, nil
 }
