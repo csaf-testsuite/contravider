@@ -12,38 +12,28 @@
 package web
 
 import (
-	"fmt"
 	"net/http"
 	"path/filepath"
-	"text/template"
 
 	"github.com/csaf-testsuite/contravider/pkg/config"
 	"github.com/csaf-testsuite/contravider/pkg/middleware"
+	"github.com/csaf-testsuite/contravider/pkg/providers"
 )
 
 // Controller binds the endpoints to the internal logic.
 type Controller struct {
-	cfg   *config.Config
-	tmpls *template.Template
+	cfg *config.Config
+	sys *providers.System
 }
-
-// templateFuncs are the functions usable in the templates.
-var templateFuncs = template.FuncMap{}
 
 // NewController returns a new Controller.
 func NewController(
 	cfg *config.Config,
+	sys *providers.System,
 ) (*Controller, error) {
-	path := filepath.Join(cfg.Web.Root, "templates", "*.tmpl")
-
-	tmpls, err := template.New("index").Funcs(templateFuncs).ParseGlob(path)
-	if err != nil {
-		return nil, fmt.Errorf("loading templates failed: %w", err)
-	}
-
 	return &Controller{
-		cfg:   cfg,
-		tmpls: tmpls,
+		cfg: cfg,
+		sys: sys,
 	}, nil
 }
 

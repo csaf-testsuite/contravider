@@ -21,7 +21,7 @@ import (
 )
 
 // DefaultConfigFile is the name of the default config file.
-const DefaultConfigFile = "docs/example-contravider-config.toml"
+const DefaultConfigFile = "contraviderd.toml"
 
 const (
 	defaultLogFile   = "contravider.log"
@@ -34,6 +34,11 @@ const (
 	defaultWebHost = "localhost"
 	defaultWebPort = 8083
 	defaultWebRoot = "web"
+)
+
+const (
+	defaultProvidersGitURL  = "https://github.com/csaf-testsuite/distribution.git"
+	defaultProvidersWorkDir = "."
 )
 
 // Log are the config options for the logging.
@@ -53,11 +58,18 @@ type Web struct {
 	Password string `toml:"password"`
 }
 
+// Providers are the config options for the served provider profiles.
+type Providers struct {
+	GitURL   string   `toml:"git_url"`
+	Profiles Profiles `toml:"profiles"`
+	WorkDir  string   `toml:"workdir"`
+}
+
 // Config are all the configuration options.
 type Config struct {
-	Log      Log      `toml:"log"`
-	Web      Web      `toml:"web"`
-	Sessions Sessions `toml:"sessions"`
+	Log       Log       `toml:"log"`
+	Web       Web       `toml:"web"`
+	Providers Providers `toml:"providers"`
 }
 
 // Addr returns the combined address the web server should bind to.
@@ -80,9 +92,9 @@ func Load(file string) (*Config, error) {
 			Port: defaultWebPort,
 			Root: defaultWebRoot,
 		},
-		Sessions: Sessions{
-			Secret: nil,
-			MaxAge: defaultSessionMaxAge,
+		Providers: Providers{
+			GitURL:  defaultProvidersGitURL,
+			WorkDir: defaultProvidersWorkDir,
 		},
 	}
 	if file != "" {
@@ -101,11 +113,6 @@ func Load(file string) (*Config, error) {
 	return cfg, nil
 }
 
-// PresetDefaults initializes unset values.
-func (cfg *Config) PresetDefaults() {
-	cfg.Sessions.presetDefaults()
-}
-
 func (cfg *Config) fillFromEnv() error {
 	var (
 		storeString = store(noparse)
@@ -114,12 +121,13 @@ func (cfg *Config) fillFromEnv() error {
 		storeLevel  = store(storeLevel)
 	)
 	return storeFromEnv(
-		envStore{"OQC_LOG_FILE", storeString(&cfg.Log.File)},
-		envStore{"OQC_LOG_LEVEL", storeLevel(&cfg.Log.Level)},
-		envStore{"OQC_LOG_JSON", storeBool(&cfg.Log.JSON)},
-		envStore{"OQC_LOG_SOURCE", storeBool(&cfg.Log.Source)},
-		envStore{"OQC_WEB_HOST", storeString(&cfg.Web.Host)},
-		envStore{"OQC_WEB_PORT", storeInt(&cfg.Web.Port)},
-		envStore{"OQC_WEB_ROOT", storeString(&cfg.Web.Root)},
+		envStore{"CONTRAVIDER_LOG_FILE", storeString(&cfg.Log.File)},
+		envStore{"CONTRAVIDER_LOG_LEVEL", storeLevel(&cfg.Log.Level)},
+		envStore{"CONTRAVIDER_LOG_JSON", storeBool(&cfg.Log.JSON)},
+		envStore{"CONTRAVIDER_LOG_SOURCE", storeBool(&cfg.Log.Source)},
+		envStore{"CONTRAVIDER_WEB_HOST", storeString(&cfg.Web.Host)},
+		envStore{"CONTRAVIDER_WEB_PORT", storeInt(&cfg.Web.Port)},
+		envStore{"CONTRAVIDER_WEB_ROOT", storeString(&cfg.Web.Root)},
+		envStore{"CONTRAVIDER_PROVIDERS_GIT_URL", storeString(&cfg.Providers.GitURL)},
 	)
 }
