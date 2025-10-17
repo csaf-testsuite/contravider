@@ -16,6 +16,8 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"os"
+	"path"
 
 	"github.com/csaf-testsuite/contravider/pkg/config"
 )
@@ -68,16 +70,33 @@ func (s *System) Serve(profile string) error {
 	}
 	result := make(chan error)
 	s.fns <- func(s *System) {
-		//TODO: Cache this!
+		profilePath := path.Join(s.cfg.Web.Root, profile)
+
+		// Check if we already have instantiated this profile.
+		switch _, err := os.Stat(profilePath); {
+		case errors.Is(err, os.ErrNotExist):
+			slog.Debug("profile does not exists", "profile", profile)
+		case err != nil:
+			result <- fmt.Errorf(
+				"stating profile %q failed: %w", profile, err)
+			return
+		default:
+			// We already have it.
+			result <- nil
+			return
+		}
+
+		// The hash over all branch revisions will be the destination folder.
 		hash, err := allRevisionsHash(s.cfg.Providers.WorkDir, branches)
 		if err != nil {
-			result <- err
+			result <- fmt.Errorf(
+				"calculating hash of the branches of %q failed: %w",
+				profile, err)
 			return
 		}
 		slog.Debug("current hash", "profile", profile, "hash", hash)
+
 		//TODO: Implement me!
-		// Check if profile already exists (git worktree branch).
-		// If not create it (merge branches in new branch).
 		// If it exists check its up-to-date. Hash of revisions (git describe).
 		// Create copy with templating.
 		result <- errors.New("not implemented, yet")
