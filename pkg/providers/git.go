@@ -11,11 +11,15 @@
 package providers
 
 import (
+	"crypto/sha1"
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"strings"
 )
@@ -95,15 +99,29 @@ func initialCheckout(url, workdir string, branches []string) error {
 	return nil
 }
 
+// allRevisionsHash returns a hash over all revisions of the given branches.
+func allRevisionsHash(workdir string, branches []string) (string, error) {
+	hash := sha1.New()
+	for _, branch := range branches {
+		rev, err := currentRevision(workdir, branch)
+		if err != nil {
+			return "", fmt.Errorf("allRevisions failed for %q: %w", branch, err)
+		}
+		io.WriteString(hash, rev)
+	}
+	return hex.EncodeToString(hash.Sum(nil)), nil
+}
+
 // currentRevision returns the current revision of a checked out branch.
-func currentRevision(path string) (string, error) {
+func currentRevision(workdir, branch string) (string, error) {
 	cmd := exec.Command("git", "rev-parse", "HEAD")
-	cmd.Dir = path
+	cmd.Dir = path.Join(workdir, branch)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		slog.Error("git rev-parse failed", "msg", output, "err", err)
 		return "", fmt.Errorf("git rev-parse failed: %w", err)
 	}
 	rev := strings.TrimSpace(string(output))
+	slog.Debug("current revision", "branch", branch, "revision", rev)
 	return rev, nil
 }

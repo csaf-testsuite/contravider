@@ -15,6 +15,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 
 	"github.com/csaf-testsuite/contravider/pkg/config"
 )
@@ -59,13 +60,21 @@ func (s *System) Kill() {
 	s.fns <- func(s *System) { s.done = true }
 }
 
-func (s *System) serve(profile string) error {
+// Serve prepares the serving of a given profile.
+func (s *System) Serve(profile string) error {
 	branches := s.cfg.Providers.Profiles[profile]
 	if len(branches) == 0 {
 		return fmt.Errorf("no such profile: %q", profile)
 	}
 	result := make(chan error)
 	s.fns <- func(s *System) {
+		//TODO: Cache this!
+		hash, err := allRevisionsHash(s.cfg.Providers.WorkDir, branches)
+		if err != nil {
+			result <- err
+			return
+		}
+		slog.Debug("current hash", "profile", profile, "hash", hash)
 		//TODO: Implement me!
 		// Check if profile already exists (git worktree branch).
 		// If not create it (merge branches in new branch).
@@ -74,14 +83,4 @@ func (s *System) serve(profile string) error {
 		result <- errors.New("not implemented, yet")
 	}
 	return <-result
-}
-
-// Serve prepares the serving of a given profile.
-func (s *System) Serve(profile string) error {
-	if _, ok := s.cfg.Providers.Profiles[profile]; !ok {
-		return fmt.Errorf("profile %q not found", profile)
-	}
-	err := make(chan error)
-	s.fns <- func(s *System) { err <- s.serve(profile) }
-	return <-err
 }
