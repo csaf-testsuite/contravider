@@ -38,11 +38,11 @@ func NewMiddleware(cfg *config.Config) *Middleware {
 
 // BasicAuth enforces HTTP Basic Auth for protected paths
 // The validate function should check the credentials (for example, using configuration values).
-func (mw *Middleware) BasicAuth(next http.Handler, validate func(user, pass string) bool) http.HandlerFunc {
+func (mw *Middleware) BasicAuth(next http.Handler, validate func(user, pass string) bool, realm string) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, pass, ok := r.BasicAuth()
 		if !ok || !validate(user, pass) {
-			w.Header().Set("WWW-Authenticate", `Basic realm="restricted"`)
+			w.Header().Set("WWW-Authenticate", `Basic realm="`+realm+`"`)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}

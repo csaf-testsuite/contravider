@@ -37,10 +37,16 @@ func NewController(
 	}, nil
 }
 
-// validate checks the supplied credentials.
-// Replace this with a real lookup (config file, DB, etc.).
-func (c *Controller) validate(user, pass string) bool {
-	return user == c.cfg.Web.Username && pass == c.cfg.Web.Password
+// validate checks the supplied credentials based on the route.
+func (c *Controller) validate(route string, user, pass string) bool {
+	switch route {
+	case "/.well-known/csaf/amber/":
+		return user == c.cfg.Web.UsernameAmber && pass == c.cfg.Web.PasswordAmber
+	case "/.well-known/csaf/red/":
+		return user == c.cfg.Web.UsernameRed && pass == c.cfg.Web.PasswordRed
+	default:
+		return false
+	}
 }
 
 // Bind returns an http.Handler to be used in a web server.
@@ -71,25 +77,31 @@ func (c *Controller) Bind() http.Handler {
 		// public folders
 		{
 			"/.well-known/csaf/white/",
-			http.StripPrefix("/.well-known/csaf/white/", http.FileServer(http.Dir(c.cfg.Providers.Result))),
+			http.FileServer(http.Dir(c.cfg.Providers.Result)),
 		},
 		{
 			"/.well-known/csaf/green/",
-			http.StripPrefix("/.well-known/csaf/green/", http.FileServer(http.Dir(c.cfg.Providers.Result))),
+			http.FileServer(http.Dir(c.cfg.Providers.Result)),
 		},
 		// protected folders using basic auth (middleware)
 		{
 			"/.well-known/csaf/amber/",
 			mw.BasicAuth(
 				http.FileServer(http.Dir(c.cfg.Providers.Result)),
-				c.validate,
+				func(user, pass string) bool {
+					return c.validate("/.well-known/csaf/amber/", user, pass)
+				},
+				"amber-realm",
 			),
 		},
 		{
 			"/.well-known/csaf/red/",
 			mw.BasicAuth(
 				http.FileServer(http.Dir(c.cfg.Providers.Result)),
-				c.validate,
+				func(user, pass string) bool {
+					return c.validate("/.well-known/csaf/red/", user, pass)
+				},
+				"red-realm",
 			),
 		},
 	} {
