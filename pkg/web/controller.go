@@ -59,13 +59,13 @@ func (c *Controller) Bind() http.Handler {
 	}{
 		// public files
 		{"/.well-known/csaf/provider-metadata.json",
-			mw.ServeFiles(c.cfg.Providers.Result),
+			mw.ServeFile(c.cfg.Providers.Result),
 		},
 		{"/.well-known/csaf/service.json",
-			mw.ServeFiles(c.cfg.Providers.Result),
+			mw.ServeFile(c.cfg.Providers.Result),
 		},
 		{"/.well-known/security.txt",
-			mw.ServeFiles(c.cfg.Providers.Result),
+			mw.ServeFile(c.cfg.Providers.Result),
 		},
 		// public folders
 		{
