@@ -39,6 +39,7 @@ const (
 const (
 	defaultProvidersGitURL  = "https://github.com/csaf-testsuite/distribution.git"
 	defaultProvidersWorkDir = "."
+	deafultProvidersResult  = "."
 )
 
 // Log are the config options for the logging.
@@ -63,6 +64,7 @@ type Providers struct {
 	GitURL   string   `toml:"git_url"`
 	Profiles Profiles `toml:"profiles"`
 	WorkDir  string   `toml:"workdir"`
+	Result   string   `toml:"result"`
 }
 
 // Config are all the configuration options.
@@ -95,6 +97,7 @@ func Load(file string) (*Config, error) {
 		Providers: Providers{
 			GitURL:  defaultProvidersGitURL,
 			WorkDir: defaultProvidersWorkDir,
+			Result:  deafultProvidersResult,
 		},
 	}
 	if file != "" {

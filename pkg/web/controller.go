@@ -55,40 +55,40 @@ func (c *Controller) Bind() http.Handler {
 		// public files
 		{"/.well-known/csaf/provider-metadata.json",
 			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				http.ServeFile(w, r, filepath.Join(c.cfg.Web.Root, r.URL.Path[1:]))
+				http.ServeFile(w, r, filepath.Join(c.cfg.Providers.Result, r.URL.Path[1:]))
 			}),
 		},
 		{"/.well-known/csaf/service.json",
 			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				http.ServeFile(w, r, filepath.Join(c.cfg.Web.Root, r.URL.Path[1:]))
+				http.ServeFile(w, r, filepath.Join(c.cfg.Providers.Result, r.URL.Path[1:]))
 			}),
 		},
 		{"/.well-known/security.txt",
 			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				http.ServeFile(w, r, filepath.Join(c.cfg.Web.Root, r.URL.Path[1:]))
+				http.ServeFile(w, r, filepath.Join(c.cfg.Providers.Result, r.URL.Path[1:]))
 			}),
 		},
 		// public folders
 		{
 			"/.well-known/csaf/white/",
-			http.StripPrefix("/.well-known/csaf/white/", http.FileServer(http.Dir(c.cfg.Web.Root))),
+			http.StripPrefix("/.well-known/csaf/white/", http.FileServer(http.Dir(c.cfg.Providers.Result))),
 		},
 		{
 			"/.well-known/csaf/green/",
-			http.StripPrefix("/.well-known/csaf/green/", http.FileServer(http.Dir(c.cfg.Web.Root))),
+			http.StripPrefix("/.well-known/csaf/green/", http.FileServer(http.Dir(c.cfg.Providers.Result))),
 		},
 		// protected folders using basic auth (middleware)
 		{
 			"/.well-known/csaf/amber/",
 			mw.BasicAuth(
-				http.FileServer(http.Dir(c.cfg.Web.Root)),
+				http.FileServer(http.Dir(c.cfg.Providers.Result)),
 				c.validate,
 			),
 		},
 		{
 			"/.well-known/csaf/red/",
 			mw.BasicAuth(
-				http.FileServer(http.Dir(c.cfg.Web.Root)),
+				http.FileServer(http.Dir(c.cfg.Providers.Result)),
 				c.validate,
 			),
 		},
