@@ -14,6 +14,7 @@ package middleware
 
 import (
 	"net/http"
+	"path/filepath"
 
 	"github.com/csaf-testsuite/contravider/pkg/config"
 )
@@ -48,6 +49,15 @@ func (mw *Middleware) BasicAuth(next http.Handler, validate func(user, pass stri
 		}
 		// Credentials are valid -> continue.
 		next.ServeHTTP(w, r)
+	})
+}
+
+// ServeFiles returns a handler function to serve files from a given directory.
+func (mw *Middleware) ServeFiles(root string) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Construct the file path relative to the root directory
+		filePath := filepath.Join(root, r.URL.Path[1:])
+		http.ServeFile(w, r, filePath)
 	})
 }
 

@@ -13,7 +13,6 @@ package web
 
 import (
 	"net/http"
-	"path/filepath"
 
 	"github.com/csaf-testsuite/contravider/pkg/config"
 	"github.com/csaf-testsuite/contravider/pkg/middleware"
@@ -60,19 +59,13 @@ func (c *Controller) Bind() http.Handler {
 	}{
 		// public files
 		{"/.well-known/csaf/provider-metadata.json",
-			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				http.ServeFile(w, r, filepath.Join(c.cfg.Providers.Result, r.URL.Path[1:]))
-			}),
+			mw.ServeFiles(c.cfg.Providers.Result),
 		},
 		{"/.well-known/csaf/service.json",
-			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				http.ServeFile(w, r, filepath.Join(c.cfg.Providers.Result, r.URL.Path[1:]))
-			}),
+			mw.ServeFiles(c.cfg.Providers.Result),
 		},
 		{"/.well-known/security.txt",
-			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				http.ServeFile(w, r, filepath.Join(c.cfg.Providers.Result, r.URL.Path[1:]))
-			}),
+			mw.ServeFiles(c.cfg.Providers.Result),
 		},
 		// public folders
 		{
