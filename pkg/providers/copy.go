@@ -11,8 +11,11 @@
 package providers
 
 import (
+	"archive/tar"
+	"errors"
 	"fmt"
 	"html/template"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -31,6 +34,28 @@ type TemplateData struct {
 	RolieFeedURL          string
 	ServiceCollectionURL  string
 	PublisherNamespaceURL string
+}
+
+// templateFromTar deserializes a tar from a stream.
+func templateFromTar(targetDir string) func(io.Reader) error {
+	return func(r io.Reader) error {
+		if err := os.MkdirAll(targetDir, 0777); err != nil {
+			return fmt.Errorf("creating profile directory failed: %w", err)
+		}
+		// TODO: Implement me!
+		tr := tar.NewReader(r)
+		for {
+			hdr, err := tr.Next()
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			if err != nil {
+				return fmt.Errorf("untaring failed: %w", err)
+			}
+			fmt.Printf("found %q in tar stream\n", hdr.Name)
+		}
+		return nil
+	}
 }
 
 // CopyDirectory copies all files from the input directory inputDir and all files in all subfolders

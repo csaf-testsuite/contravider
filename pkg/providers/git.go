@@ -125,3 +125,56 @@ func currentRevision(workdir, branch string) (string, error) {
 	slog.Debug("current revision", "branch", branch, "revision", rev)
 	return rev, nil
 }
+
+// mergeBranches merges all branches into first branch and serializes
+// as a tar stream. After that the original revision of the first branch
+// is restored.
+func mergeBranches(
+	workdir string, branches []string,
+	untar func(io.Reader) error,
+) (err error) {
+	base := branches[0]
+	head, err := currentRevision(workdir, base)
+	if err != nil {
+		return fmt.Errorf("merging branches failed: %w", err)
+	}
+
+	baseDir := path.Join(workdir, base)
+
+	// Guarantee that the original revision is restored.
+	defer func() {
+		cmd := exec.Command("git", "reset", "--hard", head)
+		cmd.Dir = baseDir
+		_, err2 := cmd.CombinedOutput()
+		err = errors.Join(err, err2)
+	}()
+
+	// Merge other branches into first.
+	for _, branch := range branches[1:] {
+		cmd := exec.Command("git", "merge", "--no-edit", branch)
+		cmd.Dir = baseDir
+		_, err := cmd.CombinedOutput()
+		if err != nil {
+			return fmt.Errorf(
+				"merging branch %q into %q failed: %w",
+				branch, base, err)
+		}
+	}
+
+	// Pipe the git archive tar stream to given function.
+	cmd := exec.Command("git", "archive", "--format=tar", "HEAD")
+	cmd.Dir = baseDir
+	stdout, err2 := cmd.StdoutPipe()
+	if err2 != nil {
+		err = fmt.Errorf("failed to get stdout from git archive: %w", err)
+		return
+	}
+	if err = cmd.Start(); err != nil {
+		err = fmt.Errorf("starting git archive failed: %w", err)
+		return
+	}
+	err3 := untar(stdout)
+	err4 := cmd.Wait()
+	err = errors.Join(err3, err4)
+	return
+}

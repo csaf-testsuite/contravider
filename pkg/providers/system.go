@@ -18,6 +18,7 @@ import (
 	"log/slog"
 	"os"
 	"path"
+	"path/filepath"
 
 	"github.com/csaf-testsuite/contravider/pkg/config"
 )
@@ -70,10 +71,17 @@ func (s *System) Serve(profile string) error {
 	}
 	result := make(chan error)
 	s.fns <- func(s *System) {
-		profilePath := path.Join(s.cfg.Web.Root, profile)
+		profileDir := path.Join(s.cfg.Web.Root, profile)
+		profileDir, err := filepath.Abs(profileDir)
+		if err != nil {
+			result <- fmt.Errorf("unable to get abs path for %q: %w", profile, err)
+			return
+		}
+
+		slog.Debug("profile dir", "dir", profileDir)
 
 		// Check if we already have instantiated this profile.
-		switch _, err := os.Stat(profilePath); {
+		switch _, err := os.Stat(profileDir); {
 		case errors.Is(err, os.ErrNotExist):
 			slog.Debug("profile does not exists", "profile", profile)
 		case err != nil:
@@ -96,10 +104,28 @@ func (s *System) Serve(profile string) error {
 		}
 		slog.Debug("current hash", "profile", profile, "hash", hash)
 
-		//TODO: Implement me!
-		// If it exists check its up-to-date. Hash of revisions (git describe).
-		// Create copy with templating.
-		result <- errors.New("not implemented, yet")
+		targetDir := path.Join(s.cfg.Web.Root, hash)
+		if targetDir, err = filepath.Abs(targetDir); err != nil {
+			result <- fmt.Errorf("unable to get abs path for %q: %w", profile, err)
+			return
+		}
+
+		// TODO: Pass templates in.
+		untar := templateFromTar(targetDir)
+
+		if err := mergeBranches(s.cfg.Providers.WorkDir, branches, untar); err != nil {
+			os.RemoveAll(targetDir)
+			result <- fmt.Errorf("merging profile %q failed: %w", profile, err)
+			return
+		}
+
+		// Create a symlink for the profile.
+		if err := os.Symlink(targetDir, profileDir); err != nil {
+			os.RemoveAll(targetDir)
+			result <- fmt.Errorf("symlinking profile %q failed: %w", profile, err)
+		}
+
+		result <- nil
 	}
 	return <-result
 }
