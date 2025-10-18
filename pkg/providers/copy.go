@@ -53,7 +53,7 @@ func (td *TemplateData) asMap() map[string]string {
 	}
 }
 
-// templateFromTar deserializes files from a tar from a stream as templates
+// templateFromTar deserializes files from a tar stream as templates
 // and instantiate them with the given template data.
 func templateFromTar(targetDir string, data *TemplateData) func(io.Reader) error {
 	return func(r io.Reader) error {
