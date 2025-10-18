@@ -110,8 +110,17 @@ func (s *System) Serve(profile string) error {
 			return
 		}
 
+		// Create target directory to write the export into.
+		if err := os.MkdirAll(targetDir, 0777); err != nil {
+			result <- fmt.Errorf("creating profile directory failed: %w", err)
+			return
+		}
+
 		// TODO: Pass templates in.
-		untar := templateFromTar(targetDir)
+		data := &TemplateData{
+			// TODO: Fill me!
+		}
+		untar := templateFromTar(targetDir, data)
 
 		if err := mergeBranches(s.cfg.Providers.WorkDir, branches, untar); err != nil {
 			os.RemoveAll(targetDir)
@@ -119,10 +128,13 @@ func (s *System) Serve(profile string) error {
 			return
 		}
 
+		// TODO: Do signing.
+
 		// Create a symlink for the profile.
 		if err := os.Symlink(targetDir, profileDir); err != nil {
 			os.RemoveAll(targetDir)
 			result <- fmt.Errorf("symlinking profile %q failed: %w", profile, err)
+			return
 		}
 
 		result <- nil

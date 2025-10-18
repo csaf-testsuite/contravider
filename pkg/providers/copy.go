@@ -16,9 +16,12 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"log/slog"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/ProtonMail/gopenpgp/v2/crypto"
 )
@@ -36,13 +39,25 @@ type TemplateData struct {
 	PublisherNamespaceURL string
 }
 
-// templateFromTar deserializes a tar from a stream.
-func templateFromTar(targetDir string) func(io.Reader) error {
+// asMap converts the template data to an upper case key map.
+func (td *TemplateData) asMap() map[string]string {
+	return map[string]string{
+		"CANONICAL_URL":           td.CanonicalURL,
+		"DIRECTORY_URL":           td.DirectoryURL,
+		"DISTRIBUTION_URL":        td.DistributionURL,
+		"FEED_URL":                td.FeedURL,
+		"PUBLIC_OPENPGP_KEY_URL":  td.PublicOpenPGPKeyURL,
+		"ROLIE_FEED_URL":          td.RolieFeedURL,
+		"SERVICE_COLLECTION_URL":  td.ServiceCollectionURL,
+		"PUBLISHER_NAMESPACE_URL": td.PublisherNamespaceURL,
+	}
+}
+
+// templateFromTar deserializes files from a tar from a stream as templates
+// and instantiate them with the given template data.
+func templateFromTar(targetDir string, data *TemplateData) func(io.Reader) error {
 	return func(r io.Reader) error {
-		if err := os.MkdirAll(targetDir, 0777); err != nil {
-			return fmt.Errorf("creating profile directory failed: %w", err)
-		}
-		// TODO: Implement me!
+		tmplMap := data.asMap()
 		tr := tar.NewReader(r)
 		for {
 			hdr, err := tr.Next()
@@ -52,7 +67,40 @@ func templateFromTar(targetDir string) func(io.Reader) error {
 			if err != nil {
 				return fmt.Errorf("untaring failed: %w", err)
 			}
-			fmt.Printf("found %q in tar stream\n", hdr.Name)
+			parts := strings.Split(hdr.Name, "/")
+			if len(parts) < 3 || parts[0] != "www" || parts[1] != "html" {
+				slog.Debug("ignore tar entry", "name", hdr.Name)
+				continue
+			}
+			parts[1] = targetDir // prefix with targetDir
+			switch name := path.Join(parts[1:]...); hdr.Typeflag {
+			case tar.TypeReg:
+				slog.Debug("create file", "file", name)
+				content, err := io.ReadAll(tr)
+				if err != nil {
+					return fmt.Errorf("cannot read data of %q: %w", hdr.Name, err)
+				}
+				// Parse the template data.
+				tmpl, err := template.New(parts[len(parts)-1]).
+					Delims("$((", "))$").
+					Parse(string(content))
+				if err != nil {
+					return fmt.Errorf("parsing %q as template failed: %w", hdr.Name, err)
+				}
+				f, err := os.OpenFile(name, os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.FileMode(hdr.Mode))
+				if err != nil {
+					return fmt.Errorf("cannot create file %q: %w", name, err)
+				}
+				if err := errors.Join(tmpl.Execute(f, tmplMap), f.Close()); err != nil {
+					return fmt.Errorf("writing templated data to %q failed: %w", name, err)
+				}
+
+			case tar.TypeDir:
+				slog.Debug("create directory", "dir", name)
+				if err := os.MkdirAll(name, os.FileMode(hdr.Mode)); err != nil {
+					return fmt.Errorf("creating directory %q failed: %w", name, err)
+				}
+			}
 		}
 		return nil
 	}
