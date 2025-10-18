@@ -15,6 +15,11 @@
 #source = false
 #json = false
 
+# Signing key
+#[signing]
+#key        = "privatekey.asc"
+#passphrase = ""
+
 # Web server configuration
 [web]
 #host = "localhost"

@@ -41,6 +41,11 @@ const (
 	defaultProvidersWorkDir = "."
 )
 
+const (
+	defaultSigningKey = "privatekey.asc"
+	defaultPassphrase = ""
+)
+
 // Log are the config options for the logging.
 type Log struct {
 	File   string     `toml:"file"`
@@ -58,6 +63,12 @@ type Web struct {
 	Password string `toml:"password"`
 }
 
+// Signing are the options needed to sign the advisories.
+type Signing struct {
+	Key        string `toml:"key"`
+	Passphrase string `toml:"passphrase"`
+}
+
 // Providers are the config options for the served provider profiles.
 type Providers struct {
 	GitURL   string   `toml:"git_url"`
@@ -69,6 +80,7 @@ type Providers struct {
 type Config struct {
 	Log       Log       `toml:"log"`
 	Web       Web       `toml:"web"`
+	Signing   Signing   `toml:"signing"`
 	Providers Providers `toml:"providers"`
 }
 
@@ -91,6 +103,10 @@ func Load(file string) (*Config, error) {
 			Host: defaultWebHost,
 			Port: defaultWebPort,
 			Root: defaultWebRoot,
+		},
+		Signing: Signing{
+			Key:        defaultSigningKey,
+			Passphrase: defaultPassphrase,
 		},
 		Providers: Providers{
 			GitURL:  defaultProvidersGitURL,
@@ -128,6 +144,7 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"CONTRAVIDER_WEB_HOST", storeString(&cfg.Web.Host)},
 		envStore{"CONTRAVIDER_WEB_PORT", storeInt(&cfg.Web.Port)},
 		envStore{"CONTRAVIDER_WEB_ROOT", storeString(&cfg.Web.Root)},
+		envStore{"CONTRAVIDER_SIGNING_KEY", storeString(&cfg.Signing.Key)},
 		envStore{"CONTRAVIDER_PROVIDERS_GIT_URL", storeString(&cfg.Providers.GitURL)},
 	)
 }

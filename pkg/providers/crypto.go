@@ -29,17 +29,17 @@ func prepareKeyRing(armoredPrivateKeyPath string, passphrase string) (*crypto.Ke
 	if err != nil {
 		return nil, fmt.Errorf("failed to load private key: %w", err)
 	}
-	privateKeyObj, err := crypto.NewKeyFromArmored(string(armoredPrivateKeyByte))
+	privateKey, err := crypto.NewKeyFromArmored(string(armoredPrivateKeyByte))
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse private key: %w", err)
 	}
-	// ToDo: Evaluate: Locking even worth it?
-	unlockedKeyObj, err := privateKeyObj.Unlock([]byte(passphrase))
-	if err != nil {
-		return nil, fmt.Errorf("failed to unlock private key: %w", err)
+	if passphrase != "" {
+		privateKey, err = privateKey.Unlock([]byte(passphrase))
+		if err != nil {
+			return nil, fmt.Errorf("failed to unlock private key: %w", err)
+		}
 	}
-
-	signingKeyRing, err := crypto.NewKeyRing(unlockedKeyObj)
+	signingKeyRing, err := crypto.NewKeyRing(privateKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create keyring: %w", err)
 	}

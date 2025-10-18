@@ -20,6 +20,7 @@ import (
 	"path"
 	"path/filepath"
 
+	"github.com/ProtonMail/gopenpgp/v2/crypto"
 	"github.com/csaf-testsuite/contravider/pkg/config"
 )
 
@@ -27,12 +28,17 @@ import (
 // and the served providers.
 type System struct {
 	cfg  *config.Config
+	key  *crypto.KeyRing
 	done bool
 	fns  chan func(*System)
 }
 
 // NewSystem create a new System.
 func NewSystem(cfg *config.Config) (*System, error) {
+	key, err := prepareKeyRing(cfg.Signing.Key, cfg.Signing.Passphrase)
+	if err != nil {
+		return nil, fmt.Errorf("cannot load signing key: %w", err)
+	}
 	if err := initialCheckout(
 		cfg.Providers.GitURL,
 		cfg.Providers.WorkDir,
@@ -42,6 +48,7 @@ func NewSystem(cfg *config.Config) (*System, error) {
 	}
 	return &System{
 		cfg: cfg,
+		key: key,
 		fns: make(chan func(*System)),
 	}, nil
 }
@@ -128,6 +135,12 @@ func (s *System) Serve(profile string) error {
 			return
 		}
 
+		// Store the public key in the exported directory.
+		if err := s.writePublicKey(targetDir); err != nil {
+			result <- fmt.Errorf("signing failed: %w", err)
+			return
+		}
+
 		// TODO: Do signing.
 
 		// Create a symlink for the profile.
@@ -140,4 +153,21 @@ func (s *System) Serve(profile string) error {
 		result <- nil
 	}
 	return <-result
+}
+
+// writePublicKey writes the public key into the target directory.
+func (s *System) writePublicKey(targetDir string) error {
+	key, err := s.key.GetKey(0)
+	if err != nil {
+		return fmt.Errorf("cannot extract private key: %w", err)
+	}
+	asc, err := key.GetArmoredPublicKey()
+	if err != nil {
+		return fmt.Errorf("cannot get public key: %w", err)
+	}
+	path := path.Join(targetDir, "public.asc")
+	if err := os.WriteFile(path, []byte(asc), 0666); err != nil {
+		return fmt.Errorf("cannot write public key to %q: %w", path, err)
+	}
+	return nil
 }
