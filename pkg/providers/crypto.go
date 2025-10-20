@@ -62,11 +62,12 @@ func signFileWithKeyRing(filePath string, signingKeyRing *crypto.KeyRing) error 
 		return fmt.Errorf("failed to sign message: %w", err)
 	}
 
-	signPath := filePath + ".asc"
 	armor, err := pgpSignature.GetArmored()
 	if err != nil {
 		return fmt.Errorf("failed to armor signature: %w", err)
 	}
+
+	signPath := filePath + ".asc"
 	if err := os.WriteFile(signPath, []byte(armor), 0644); err != nil {
 		return fmt.Errorf("failed to write signature to file: %w", err)
 	}
