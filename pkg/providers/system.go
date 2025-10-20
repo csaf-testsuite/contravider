@@ -19,6 +19,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 
 	"github.com/ProtonMail/gopenpgp/v2/crypto"
 	"github.com/csaf-testsuite/contravider/pkg/config"
@@ -137,11 +138,17 @@ func (s *System) Serve(profile string) error {
 
 		// Store the public key in the exported directory.
 		if err := writePublicKey(s.keyring, targetDir); err != nil {
+			os.RemoveAll(targetDir)
 			result <- fmt.Errorf("signing failed: %w", err)
 			return
 		}
 
-		// TODO: Do signing.
+		// Sign and hash the relevant files.
+		if err := buildPatternActions(s.keyring).Apply(targetDir); err != nil {
+			os.RemoveAll(targetDir)
+			result <- fmt.Errorf("applying actions failed: %w", err)
+			return
+		}
 
 		// Create a symlink for the profile.
 		if err := os.Symlink(targetDir, profileDir); err != nil {
@@ -153,4 +160,13 @@ func (s *System) Serve(profile string) error {
 		result <- nil
 	}
 	return <-result
+}
+
+// buildPatternActions builds a PatternActions slice allowing to
+// insert additional info if necessary.
+func buildPatternActions(keyring *crypto.KeyRing) PatternActions {
+	return PatternActions{
+		{regexp.MustCompile(`(provider-metadata|service|category).json$`), nil},
+		{regexp.MustCompile(`.json$`), []Action{hashFile, encloseSignFile(keyring)}},
+	}
 }
