@@ -116,28 +116,32 @@ func templateFromTar(targetDir string, data *TemplateData) func(io.Reader) error
 	}
 }
 
-// Apply walks through a given directory and applies all Actions as defined in PatternAction
+// Apply walks recursively over a given directory and
+// applies all matching actions to the files.
 func (pa PatternActions) Apply(inputDir string) error {
-
-	return filepath.Walk(inputDir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		// Ignore none regular file.
-		if !info.Mode().IsRegular() {
-			return nil
-		}
-		fname := info.Name()
-		for _, p := range pa {
-			if p.Pattern.MatchString(fname) {
-				for _, action := range p.Actions {
-					if err := action(path, info); err != nil {
-						return fmt.Errorf("apply pattern %q failed: %w", p.Pattern, err)
-					}
-				}
-				break
+	return filepath.Walk(
+		inputDir,
+		func(path string, info os.FileInfo, err error,
+		) error {
+			if err != nil {
+				return err
 			}
-		}
-		return nil
-	})
+			// Ignore none regular files.
+			if !info.Mode().IsRegular() {
+				return nil
+			}
+			fname := info.Name()
+			for _, p := range pa {
+				if p.Pattern.MatchString(fname) {
+					for _, action := range p.Actions {
+						if err := action(path, info); err != nil {
+							return fmt.Errorf(
+								"apply pattern %q failed: %w", p.Pattern, err)
+						}
+					}
+					break
+				}
+			}
+			return nil
+		})
 }
