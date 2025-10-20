@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"path/filepath"
 
 	"github.com/ProtonMail/gopenpgp/v2/crypto"
@@ -164,4 +165,22 @@ func hashFile(file string, _ os.FileInfo) error {
 func checkFileNotExists(filePath string) bool {
 	_, err := os.Stat(filePath)
 	return errors.Is(err, os.ErrNotExist)
+}
+
+// writePublicKey writes the public key into the target directory.
+func writePublicKey(keyring *crypto.KeyRing, targetDir string) error {
+	key, err := keyring.GetKey(0)
+	if err != nil {
+		return fmt.Errorf("cannot extract private key: %w", err)
+	}
+	asc, err := key.GetArmoredPublicKey()
+	if err != nil {
+		return fmt.Errorf("cannot get public key: %w", err)
+	}
+	hexid := key.GetHexKeyID()
+	path := path.Join(targetDir, hexid+".asc")
+	if err := os.WriteFile(path, []byte(asc), 0666); err != nil {
+		return fmt.Errorf("cannot write public key to %q: %w", path, err)
+	}
+	return nil
 }

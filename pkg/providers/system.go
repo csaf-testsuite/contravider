@@ -27,10 +27,10 @@ import (
 // System manages the sync between the git repo, the local checkouts
 // and the served providers.
 type System struct {
-	cfg  *config.Config
-	key  *crypto.KeyRing
-	done bool
-	fns  chan func(*System)
+	cfg     *config.Config
+	keyring *crypto.KeyRing
+	done    bool
+	fns     chan func(*System)
 }
 
 // NewSystem create a new System.
@@ -47,9 +47,9 @@ func NewSystem(cfg *config.Config) (*System, error) {
 		return nil, fmt.Errorf("initial checkout failed %w", err)
 	}
 	return &System{
-		cfg: cfg,
-		key: key,
-		fns: make(chan func(*System)),
+		cfg:     cfg,
+		keyring: key,
+		fns:     make(chan func(*System)),
 	}, nil
 }
 
@@ -136,7 +136,7 @@ func (s *System) Serve(profile string) error {
 		}
 
 		// Store the public key in the exported directory.
-		if err := s.writePublicKey(targetDir); err != nil {
+		if err := writePublicKey(s.keyring, targetDir); err != nil {
 			result <- fmt.Errorf("signing failed: %w", err)
 			return
 		}
@@ -153,21 +153,4 @@ func (s *System) Serve(profile string) error {
 		result <- nil
 	}
 	return <-result
-}
-
-// writePublicKey writes the public key into the target directory.
-func (s *System) writePublicKey(targetDir string) error {
-	key, err := s.key.GetKey(0)
-	if err != nil {
-		return fmt.Errorf("cannot extract private key: %w", err)
-	}
-	asc, err := key.GetArmoredPublicKey()
-	if err != nil {
-		return fmt.Errorf("cannot get public key: %w", err)
-	}
-	path := path.Join(targetDir, "public.asc")
-	if err := os.WriteFile(path, []byte(asc), 0666); err != nil {
-		return fmt.Errorf("cannot write public key to %q: %w", path, err)
-	}
-	return nil
 }
