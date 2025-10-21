@@ -78,12 +78,12 @@ func templateFromTar(targetDir string, data *TemplateData) func(io.Reader) error
 				return fmt.Errorf("untaring failed: %w", err)
 			}
 			parts := strings.Split(hdr.Name, "/")
-			if len(parts) < 3 || parts[0] != "www" || parts[1] != "html" {
+			if len(parts) < 3 || parts[0] != "data" {
 				slog.Debug("ignore tar entry", "name", hdr.Name)
 				continue
 			}
-			parts[1] = targetDir // prefix with targetDir
-			switch name := path.Join(parts[1:]...); hdr.Typeflag {
+			parts[0] = targetDir // prefix with targetDir
+			switch name := path.Join(parts...); hdr.Typeflag {
 			case tar.TypeReg:
 				slog.Debug("create file", "file", name)
 				content, err := io.ReadAll(tr)
