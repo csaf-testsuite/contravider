@@ -96,13 +96,11 @@ func run(cfg *config.Config) error {
 		}
 	}()
 
-	/*
-		go func() {
-			if err := sys.Serve("changes_csv"); err != nil {
-				slog.Error("serving profile failed", "error", err)
-			}
-		}()
-	*/
+	go func() {
+		if err := sys.Serve("changes_csv"); err != nil {
+			slog.Error("serving profile failed", "error", err)
+		}
+	}()
 
 	select {
 	case <-ctx.Done():

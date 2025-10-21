@@ -66,8 +66,8 @@ func (s *System) Run(ctx context.Context) {
 			s.done = true
 		case fn := <-s.fns:
 			fn(s)
-		case t := <-ticker.C:
-			s.update(t)
+		case <-ticker.C:
+			s.update()
 		}
 	}
 }
@@ -180,7 +180,34 @@ func (s *System) buildPatternActions() PatternActions {
 
 // update checks the git repo for update and invalidates providers
 // which need regeneration.
-func (s *System) update(_ time.Time) {
-	// TODO: Implement me!
-	slog.Debug("updating repo is not implemented, yet")
+func (s *System) update() {
+	refreshed, err := updateBranches(
+		s.cfg.Providers.WorkDir,
+		s.cfg.Providers.Profiles.AllBranches())
+	if err != nil {
+		slog.Error("updating branches failed", "error", err)
+	}
+	// Even if there where errors there might be some links to delete.
+	profiles := s.cfg.Providers.Profiles.DependingProfiles(refreshed)
+	for _, profile := range profiles {
+		link := path.Join(s.cfg.Web.Root, profile)
+		info, err := os.Lstat(link)
+		// Delete only the exported profile with symlinks to them.
+		if err != nil || info.Mode()&os.ModeSymlink != os.ModeSymlink {
+			continue
+		}
+		exported, err := filepath.EvalSymlinks(link)
+		if err != nil {
+			slog.Error("evaluating symlink failed", "error", err)
+			continue
+		}
+		// Remove the linked profile export.
+		if err := os.RemoveAll(exported); err != nil {
+			slog.Error("removing symlinked dir failed", "error", err, "branch", profile)
+		}
+		// Remove the link itself.
+		if err := os.Remove(link); err != nil {
+			slog.Error("removing link to profile failed", "error", err, "branch", profile)
+		}
+	}
 }

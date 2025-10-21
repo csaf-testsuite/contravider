@@ -118,3 +118,16 @@ func (p Profiles) AllBranches() []string {
 	slices.Sort(all) // to make it deterimistic.
 	return all
 }
+
+// DependingProfiles returns the profiles that depend on the given branches.
+func (p Profiles) DependingProfiles(branches []string) []string {
+	var profiles []string
+	for profile := range p {
+		if slices.ContainsFunc(p.Branches(profile), func(b string) bool {
+			return slices.Contains(branches, b)
+		}) {
+			profiles = append(profiles, profile)
+		}
+	}
+	return profiles
+}

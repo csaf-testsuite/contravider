@@ -183,3 +183,34 @@ func mergeBranches(
 	err = errors.Join(err3, err4)
 	return
 }
+
+// updateBranches updates all given branches and returns a slice
+// of branches which actually got changed.
+func updateBranches(workdir string, branches []string) ([]string, error) {
+	var (
+		refreshed []string
+		errs      []error
+	)
+	for _, branch := range branches {
+		before, err := currentRevision(workdir, branch)
+		if err != nil {
+			errs = append(errs, err)
+			continue
+		}
+		cmd := exec.Command("git", "pull")
+		cmd.Dir = path.Join(workdir, branch)
+		if _, err := cmd.CombinedOutput(); err != nil {
+			errs = append(errs, err)
+			continue
+		}
+		after, err := currentRevision(workdir, branch)
+		if err != nil {
+			errs = append(errs, err)
+			continue
+		}
+		if !bytes.Equal(before, after) {
+			refreshed = append(refreshed, branch)
+		}
+	}
+	return refreshed, errors.Join(errs...)
+}
