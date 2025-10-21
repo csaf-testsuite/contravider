@@ -77,6 +77,9 @@ func (s *System) Kill() {
 	s.fns <- func(s *System) { s.done = true }
 }
 
+// ErrProfileNotFound is returned if a profile was not found.
+var ErrProfileNotFound = errors.New("profile not found")
+
 // Serve prepares the serving of a given profile.
 func (s *System) Serve(profile string) error {
 	branches := s.cfg.Providers.Profiles[profile]
