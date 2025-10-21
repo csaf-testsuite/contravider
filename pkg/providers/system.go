@@ -13,6 +13,7 @@ package providers
 
 import (
 	"context"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -103,13 +104,14 @@ func (s *System) Serve(profile string) error {
 		}
 
 		// The hash over all branch revisions will be the destination folder.
-		hash, err := allRevisionsHash(s.cfg.Providers.WorkDir, branches)
+		h, err := allRevisionsHash(s.cfg.Providers.WorkDir, branches)
 		if err != nil {
 			result <- fmt.Errorf(
 				"calculating hash of the branches of %q failed: %w",
 				profile, err)
 			return
 		}
+		hash := hex.EncodeToString(h)
 		slog.Debug("current hash", "profile", profile, "hash", hash)
 
 		targetDir := path.Join(s.cfg.Web.Root, hash)

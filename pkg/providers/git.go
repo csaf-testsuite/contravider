@@ -11,6 +11,7 @@
 package providers
 
 import (
+	"bytes"
 	"crypto/sha1"
 	"encoding/hex"
 	"errors"
@@ -21,7 +22,6 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
-	"strings"
 )
 
 func initialCheckout(url, workdir string, branches []string) error {
@@ -100,30 +100,34 @@ func initialCheckout(url, workdir string, branches []string) error {
 }
 
 // allRevisionsHash returns a hash over all revisions of the given branches.
-func allRevisionsHash(workdir string, branches []string) (string, error) {
+func allRevisionsHash(workdir string, branches []string) ([]byte, error) {
 	hash := sha1.New()
 	for _, branch := range branches {
 		rev, err := currentRevision(workdir, branch)
 		if err != nil {
-			return "", fmt.Errorf("allRevisions failed for %q: %w", branch, err)
+			return nil, fmt.Errorf("allRevisions failed for %q: %w", branch, err)
 		}
-		io.WriteString(hash, rev)
+		hash.Write(rev)
 	}
-	return hex.EncodeToString(hash.Sum(nil)), nil
+	return hash.Sum(nil), nil
 }
 
 // currentRevision returns the current revision of a checked out branch.
-func currentRevision(workdir, branch string) (string, error) {
+func currentRevision(workdir, branch string) ([]byte, error) {
 	cmd := exec.Command("git", "rev-parse", "HEAD")
 	cmd.Dir = path.Join(workdir, branch)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		slog.Error("git rev-parse failed", "msg", output, "err", err)
-		return "", fmt.Errorf("git rev-parse failed: %w", err)
+		return nil, fmt.Errorf("git rev-parse failed: %w", err)
 	}
-	rev := strings.TrimSpace(string(output))
-	slog.Debug("current revision", "branch", branch, "revision", rev)
-	return rev, nil
+	out := bytes.TrimSpace(output)
+	rev := make([]byte, hex.DecodedLen(len(out)))
+	n, err := hex.Decode(rev, out)
+	if err != nil {
+		return nil, fmt.Errorf("git revision is not a hex string: %w", err)
+	}
+	return rev[:n], nil
 }
 
 // mergeBranches merges all branches into first branch and serializes
@@ -134,10 +138,11 @@ func mergeBranches(
 	untar func(io.Reader) error,
 ) (err error) {
 	base := branches[0]
-	head, err := currentRevision(workdir, base)
+	headRev, err := currentRevision(workdir, base)
 	if err != nil {
 		return fmt.Errorf("merging branches failed: %w", err)
 	}
+	head := hex.EncodeToString(headRev)
 
 	baseDir := path.Join(workdir, base)
 
