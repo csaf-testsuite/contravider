@@ -176,8 +176,9 @@ func (s *System) Serve(profile string) error {
 // insert additional info if necessary.
 func (s *System) buildPatternActions() PatternActions {
 	return PatternActions{
-		{regexp.MustCompile(`(provider-metadata|service|category).json$`), nil},
-		{regexp.MustCompile(`.json$`), []Action{hashFile, encloseSignFile(s.keyring)}},
+		{regexp.MustCompile(`csaf-feed-tlp-[^\.]*\.json$`), nil},
+		{regexp.MustCompile(`(provider-metadata|service|category)[^\.]*\.json$`), nil},
+		{regexp.MustCompile(`\.json$`), []Action{hashFile, encloseSignFile(s.keyring)}},
 	}
 }
 
