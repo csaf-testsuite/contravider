@@ -21,6 +21,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"time"
 
 	"github.com/ProtonMail/gopenpgp/v2/crypto"
 	"github.com/csaf-testsuite/contravider/pkg/config"
@@ -57,12 +58,16 @@ func NewSystem(cfg *config.Config) (*System, error) {
 
 // Run drives the system. Meant to be run in a Go routine.
 func (s *System) Run(ctx context.Context) {
+	ticker := time.NewTicker(s.cfg.Providers.Update)
+	defer ticker.Stop()
 	for !s.done {
 		select {
 		case <-ctx.Done():
 			s.done = true
 		case fn := <-s.fns:
 			fn(s)
+		case t := <-ticker.C:
+			s.update(t)
 		}
 	}
 }
@@ -146,7 +151,7 @@ func (s *System) Serve(profile string) error {
 		}
 
 		// Sign and hash the relevant files.
-		if err := buildPatternActions(s.keyring).Apply(targetDir); err != nil {
+		if err := s.buildPatternActions().Apply(targetDir); err != nil {
 			os.RemoveAll(targetDir)
 			result <- fmt.Errorf("applying actions failed: %w", err)
 			return
@@ -166,9 +171,16 @@ func (s *System) Serve(profile string) error {
 
 // buildPatternActions builds a PatternActions slice allowing to
 // insert additional info if necessary.
-func buildPatternActions(keyring *crypto.KeyRing) PatternActions {
+func (s *System) buildPatternActions() PatternActions {
 	return PatternActions{
 		{regexp.MustCompile(`(provider-metadata|service|category).json$`), nil},
-		{regexp.MustCompile(`.json$`), []Action{hashFile, encloseSignFile(keyring)}},
+		{regexp.MustCompile(`.json$`), []Action{hashFile, encloseSignFile(s.keyring)}},
 	}
+}
+
+// update checks the git repo for update and invalidates providers
+// which need regeneration.
+func (s *System) update(_ time.Time) {
+	// TODO: Implement me!
+	slog.Debug("updating repo is not implemented, yet")
 }

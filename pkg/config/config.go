@@ -16,6 +16,7 @@ import (
 	"log/slog"
 	"net"
 	"strconv"
+	"time"
 
 	"github.com/BurntSushi/toml"
 )
@@ -39,6 +40,7 @@ const (
 const (
 	defaultProvidersGitURL  = "https://github.com/csaf-testsuite/distribution.git"
 	defaultProvidersWorkDir = "."
+	defaultProvidersUpdate  = 5 * time.Minute
 )
 
 const (
@@ -71,9 +73,10 @@ type Signing struct {
 
 // Providers are the config options for the served provider profiles.
 type Providers struct {
-	GitURL   string   `toml:"git_url"`
-	Profiles Profiles `toml:"profiles"`
-	WorkDir  string   `toml:"workdir"`
+	GitURL   string        `toml:"git_url"`
+	Profiles Profiles      `toml:"profiles"`
+	WorkDir  string        `toml:"workdir"`
+	Update   time.Duration `toml:"update"`
 }
 
 // Config are all the configuration options.
@@ -111,6 +114,7 @@ func Load(file string) (*Config, error) {
 		Providers: Providers{
 			GitURL:  defaultProvidersGitURL,
 			WorkDir: defaultProvidersWorkDir,
+			Update:  defaultProvidersUpdate,
 		},
 	}
 	if file != "" {
@@ -131,10 +135,11 @@ func Load(file string) (*Config, error) {
 
 func (cfg *Config) fillFromEnv() error {
 	var (
-		storeString = store(noparse)
-		storeInt    = store(strconv.Atoi)
-		storeBool   = store(strconv.ParseBool)
-		storeLevel  = store(storeLevel)
+		storeString   = store(noparse)
+		storeInt      = store(strconv.Atoi)
+		storeBool     = store(strconv.ParseBool)
+		storeLevel    = store(storeLevel)
+		storeDuration = store(time.ParseDuration)
 	)
 	return storeFromEnv(
 		envStore{"CONTRAVIDER_LOG_FILE", storeString(&cfg.Log.File)},
@@ -146,5 +151,6 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"CONTRAVIDER_WEB_ROOT", storeString(&cfg.Web.Root)},
 		envStore{"CONTRAVIDER_SIGNING_KEY", storeString(&cfg.Signing.Key)},
 		envStore{"CONTRAVIDER_PROVIDERS_GIT_URL", storeString(&cfg.Providers.GitURL)},
+		envStore{"CONTRAVIDER_PROVIDERS_UPDATE", storeDuration(&cfg.Providers.Update)},
 	)
 }
