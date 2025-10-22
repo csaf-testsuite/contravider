@@ -137,8 +137,16 @@ func (s *System) Serve(profile string) error {
 
 		baseURL := "http:" + s.cfg.Web.Host + ":" + strconv.Itoa(s.cfg.Web.Port) + "/" + profile
 
-		// Modify if configurable
-		keyURL := baseURL + "/" + hash + ".asc"
+		// TODO: Consider passing this along to guarantee consistency and remove repeated steps
+		keyName, err := getPublicKeyNameByPath(s.cfg.Signing.Key, s.cfg.Signing.Passphrase)
+
+		if err != nil {
+			result <- fmt.Errorf("creating public key name failed: %w", err)
+			return
+
+		}
+
+		keyURL := baseURL + "/" + keyName + ".asc"
 
 		// TODO: Pass templates in.
 		data := &TemplateData{
