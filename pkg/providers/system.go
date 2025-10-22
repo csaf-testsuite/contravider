@@ -85,7 +85,7 @@ var ErrProfileNotFound = errors.New("profile not found")
 func (s *System) Serve(profile string) error {
 	branches := s.cfg.Providers.Profiles[profile]
 	if len(branches) == 0 {
-		return fmt.Errorf("no such profile: %q", profile)
+		return ErrProfileNotFound
 	}
 	result := make(chan error)
 	s.fns <- func(s *System) {
