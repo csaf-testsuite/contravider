@@ -176,12 +176,3 @@ func writePublicKey(key *crypto.Key, targetDir string) error {
 	}
 	return nil
 }
-
-// getPublicKeyNamebyPath returns the name of the public key based on the private key located at path
-func getPublicKeyNameByPath(path string, pass string) (string, error) {
-	key, err := prepareKeyRing(path, pass)
-	if err != nil {
-		return "", fmt.Errorf("cannot extract private key: %w", err)
-	}
-	return key.GetHexKeyID(), nil
-}

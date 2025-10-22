@@ -22,6 +22,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/ProtonMail/gopenpgp/v3/crypto"
@@ -135,25 +136,7 @@ func (s *System) Serve(profile string) error {
 			return
 		}
 
-		baseURL := "http:" + s.cfg.Web.Host + ":" + strconv.Itoa(s.cfg.Web.Port) + "/" + profile
-
-		// TODO: Consider passing this along to guarantee consistency and remove repeated steps
-		keyName, err := getPublicKeyNameByPath(s.cfg.Signing.Key, s.cfg.Signing.Passphrase)
-
-		if err != nil {
-			result <- fmt.Errorf("creating public key name failed: %w", err)
-			return
-
-		}
-
-		keyURL := baseURL + "/" + keyName + ".asc"
-
-		// TODO: Pass templates in.
-		data := &TemplateData{
-			BaseURL:             baseURL,
-			PublicOpenPGPKeyURL: keyURL,
-		}
-		untar := templateFromTar(targetDir, data)
+		untar := templateFromTar(targetDir, s.fillTemplateData(profile))
 
 		if err := mergeBranches(s.cfg.Providers.WorkDir, branches, untar); err != nil {
 			os.RemoveAll(targetDir)
@@ -238,5 +221,22 @@ func (s *System) update() {
 		if err := os.Remove(link); err != nil {
 			slog.Error("removing link to profile failed", "error", err, "branch", profile)
 		}
+	}
+}
+
+// fillTemplateData fills in the data needed to be interpolated into the templates.
+func (s *System) fillTemplateData(profile string) *TemplateData {
+	r := strings.NewReplacer(
+		"{protocol}", s.cfg.Web.Protocol,
+		"{host}", s.cfg.Web.Host,
+		"{port}", strconv.Itoa(s.cfg.Web.Port),
+		"{profile}", profile,
+	)
+	baseURL := r.Replace(s.cfg.Providers.BaseURL)
+	fmt.Println(baseURL)
+	keyURL := baseURL + "/" + s.key.GetHexKeyID() + ".asc"
+	return &TemplateData{
+		BaseURL:             baseURL,
+		PublicOpenPGPKeyURL: keyURL,
 	}
 }

@@ -30,7 +30,9 @@ username = "alice"
 password = "secret"
 
 [providers]
+#git_url             = "https://github.com/csaf-testsuite/distribution.git"
 #update              = "5m"
-workdir              = "checkout"
+#base_url            = "{protocol}://{host}:{port}/{profile}"
+#workdir             = "checkout"
 profiles.index_txt   = ["main", "7.1.12_Requirement_12_index.txt"]
 profiles.changes_csv = ["main", "7.1.13_Requirement_13_changes.csv"]

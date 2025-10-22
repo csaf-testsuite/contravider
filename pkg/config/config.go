@@ -34,13 +34,14 @@ const (
 const (
 	defaultWebHost     = "localhost"
 	defaultWebPort     = 8083
-	defaultWebProtocol = "http"
+	defaultWebProtocol = "https"
 	defaultWebRoot     = "web"
 )
 
 const (
 	defaultProvidersGitURL  = "https://github.com/csaf-testsuite/distribution.git"
-	defaultProvidersWorkDir = "."
+	defaultProvidersBaseURL = "{protocol}://{host}:{port}/{profile}"
+	defaultProvidersWorkDir = "checkout"
 	defaultProvidersUpdate  = 5 * time.Minute
 )
 
@@ -76,6 +77,7 @@ type Signing struct {
 // Providers are the config options for the served provider profiles.
 type Providers struct {
 	GitURL   string        `toml:"git_url"`
+	BaseURL  string        `toml:"base_url"`
 	Profiles Profiles      `toml:"profiles"`
 	WorkDir  string        `toml:"workdir"`
 	Update   time.Duration `toml:"update"`
@@ -116,6 +118,7 @@ func Load(file string) (*Config, error) {
 		},
 		Providers: Providers{
 			GitURL:  defaultProvidersGitURL,
+			BaseURL: defaultProvidersBaseURL,
 			WorkDir: defaultProvidersWorkDir,
 			Update:  defaultProvidersUpdate,
 		},
@@ -155,6 +158,7 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"CONTRAVIDER_WEB_ROOT", storeString(&cfg.Web.Root)},
 		envStore{"CONTRAVIDER_SIGNING_KEY", storeString(&cfg.Signing.Key)},
 		envStore{"CONTRAVIDER_PROVIDERS_GIT_URL", storeString(&cfg.Providers.GitURL)},
+		envStore{"CONTRAVIDER_PROVIDERS_BASE_URL", storeString(&cfg.Providers.BaseURL)},
 		envStore{"CONTRAVIDER_PROVIDERS_UPDATE", storeDuration(&cfg.Providers.Update)},
 	)
 }
