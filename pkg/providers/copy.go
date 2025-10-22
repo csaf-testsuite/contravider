@@ -27,8 +27,8 @@ import (
 // TemplateData is a collection of strings which need to
 // be defined when building the system
 type TemplateData struct {
-	BaseURL               string
-	PublicOpenPGPKeyURL   string
+	BaseURL             string
+	PublicOpenPGPKeyURL string
 }
 
 type (

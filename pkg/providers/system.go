@@ -150,8 +150,8 @@ func (s *System) Serve(profile string) error {
 
 		// TODO: Pass templates in.
 		data := &TemplateData{
-			BaseURL:          baseURL,
-			PublicOpenPGPKeyURL:   keyURL,
+			BaseURL:             baseURL,
+			PublicOpenPGPKeyURL: keyURL,
 		}
 		untar := templateFromTar(targetDir, data)
 
