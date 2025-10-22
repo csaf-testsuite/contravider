@@ -24,6 +24,7 @@
 [web]
 #host = "localhost"
 #port = 8083
+#protocol = "https"
 #root = "web"
 username = "alice"
 password = "secret"

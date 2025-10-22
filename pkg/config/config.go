@@ -32,9 +32,10 @@ const (
 )
 
 const (
-	defaultWebHost = "localhost"
-	defaultWebPort = 8083
-	defaultWebRoot = "web"
+	defaultWebHost     = "localhost"
+	defaultWebPort     = 8083
+	defaultWebProtocol = "http"
+	defaultWebRoot     = "web"
 )
 
 const (
@@ -60,6 +61,7 @@ type Log struct {
 type Web struct {
 	Host     string `toml:"host"`
 	Port     int    `toml:"port"`
+	Protocol string `toml:"protocol"`
 	Root     string `toml:"root"`
 	Username string `toml:"username"`
 	Password string `toml:"password"`
@@ -103,9 +105,10 @@ func Load(file string) (*Config, error) {
 			JSON:   defaultLogJSON,
 		},
 		Web: Web{
-			Host: defaultWebHost,
-			Port: defaultWebPort,
-			Root: defaultWebRoot,
+			Host:     defaultWebHost,
+			Port:     defaultWebPort,
+			Protocol: defaultWebProtocol,
+			Root:     defaultWebRoot,
 		},
 		Signing: Signing{
 			Key:        defaultSigningKey,
@@ -148,6 +151,7 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"CONTRAVIDER_LOG_SOURCE", storeBool(&cfg.Log.Source)},
 		envStore{"CONTRAVIDER_WEB_HOST", storeString(&cfg.Web.Host)},
 		envStore{"CONTRAVIDER_WEB_PORT", storeInt(&cfg.Web.Port)},
+		envStore{"CONTRAVIDER_WEB_PROTOCOL", storeString(&cfg.Web.Protocol)},
 		envStore{"CONTRAVIDER_WEB_ROOT", storeString(&cfg.Web.Root)},
 		envStore{"CONTRAVIDER_SIGNING_KEY", storeString(&cfg.Signing.Key)},
 		envStore{"CONTRAVIDER_PROVIDERS_GIT_URL", storeString(&cfg.Providers.GitURL)},

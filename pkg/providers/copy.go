@@ -28,12 +28,8 @@ import (
 // be defined when building the system
 type TemplateData struct {
 	CanonicalURL          string
-	DirectoryURL          string
 	DistributionURL       string
-	FeedURL               string
 	PublicOpenPGPKeyURL   string
-	RolieFeedURL          string
-	ServiceCollectionURL  string
 	PublisherNamespaceURL string
 }
 
@@ -49,25 +45,10 @@ type (
 	PatternActions []PatternAction
 )
 
-// asMap converts the template data to an upper case key map.
-func (td *TemplateData) asMap() map[string]string {
-	return map[string]string{
-		"CANONICAL_URL":           td.CanonicalURL,
-		"DIRECTORY_URL":           td.DirectoryURL,
-		"DISTRIBUTION_URL":        td.DistributionURL,
-		"FEED_URL":                td.FeedURL,
-		"PUBLIC_OPENPGP_KEY_URL":  td.PublicOpenPGPKeyURL,
-		"ROLIE_FEED_URL":          td.RolieFeedURL,
-		"SERVICE_COLLECTION_URL":  td.ServiceCollectionURL,
-		"PUBLISHER_NAMESPACE_URL": td.PublisherNamespaceURL,
-	}
-}
-
 // templateFromTar deserializes files from a tar stream as templates
 // and instantiate them with the given template data.
 func templateFromTar(targetDir string, data *TemplateData) func(io.Reader) error {
 	return func(r io.Reader) error {
-		tmplMap := data.asMap()
 		tr := tar.NewReader(r)
 		for {
 			hdr, err := tr.Next()
@@ -101,7 +82,7 @@ func templateFromTar(targetDir string, data *TemplateData) func(io.Reader) error
 				if err != nil {
 					return fmt.Errorf("cannot create file %q: %w", name, err)
 				}
-				if err := errors.Join(tmpl.Execute(f, tmplMap), f.Close()); err != nil {
+				if err := errors.Join(tmpl.Execute(f, data), f.Close()); err != nil {
 					return fmt.Errorf("writing templated data to %q failed: %w", name, err)
 				}
 

@@ -21,6 +21,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/ProtonMail/gopenpgp/v2/crypto"
@@ -134,9 +135,17 @@ func (s *System) Serve(profile string) error {
 			return
 		}
 
+		baseURL := "http:" + s.cfg.Web.Host + ":" +  strconv.Itoa(s.cfg.Web.Port) + "/" + profile
+
+		// Modify if configurable
+		keyURL := baseURL + "/" + hash + ".asc"
+
 		// TODO: Pass templates in.
 		data := &TemplateData{
-			// TODO: Fill me!
+			CanonicalURL:          baseURL,
+			DistributionURL:       "https://www.first.org/",
+			PublicOpenPGPKeyURL:   keyURL,
+			PublisherNamespaceURL: "https://example.com/",
 		}
 		untar := templateFromTar(targetDir, data)
 
