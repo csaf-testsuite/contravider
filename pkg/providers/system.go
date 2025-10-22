@@ -24,17 +24,17 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/ProtonMail/gopenpgp/v2/crypto"
+	"github.com/ProtonMail/gopenpgp/v3/crypto"
 	"github.com/csaf-testsuite/contravider/pkg/config"
 )
 
 // System manages the sync between the git repo, the local checkouts
 // and the served providers.
 type System struct {
-	cfg     *config.Config
-	keyring *crypto.KeyRing
-	done    bool
-	fns     chan func(*System)
+	cfg  *config.Config
+	key  *crypto.Key
+	done bool
+	fns  chan func(*System)
 }
 
 // NewSystem create a new System.
@@ -51,9 +51,9 @@ func NewSystem(cfg *config.Config) (*System, error) {
 		return nil, fmt.Errorf("initial checkout failed %w", err)
 	}
 	return &System{
-		cfg:     cfg,
-		keyring: key,
-		fns:     make(chan func(*System)),
+		cfg: cfg,
+		key: key,
+		fns: make(chan func(*System)),
 	}, nil
 }
 
@@ -135,7 +135,7 @@ func (s *System) Serve(profile string) error {
 			return
 		}
 
-		baseURL := "http:" + s.cfg.Web.Host + ":" +  strconv.Itoa(s.cfg.Web.Port) + "/" + profile
+		baseURL := "http:" + s.cfg.Web.Host + ":" + strconv.Itoa(s.cfg.Web.Port) + "/" + profile
 
 		// Modify if configurable
 		keyURL := baseURL + "/" + hash + ".asc"
@@ -156,14 +156,20 @@ func (s *System) Serve(profile string) error {
 		}
 
 		// Store the public key in the exported directory.
-		if err := writePublicKey(s.keyring, targetDir); err != nil {
+		if err := writePublicKey(s.key, targetDir); err != nil {
 			os.RemoveAll(targetDir)
 			result <- fmt.Errorf("signing failed: %w", err)
 			return
 		}
 
 		// Sign and hash the relevant files.
-		if err := s.buildPatternActions().Apply(targetDir); err != nil {
+		patterns, err := s.buildPatternActions()
+		if err != nil {
+			os.RemoveAll(targetDir)
+			result <- fmt.Errorf("building patterns failed: %w", err)
+			return
+		}
+		if err := patterns.Apply(targetDir); err != nil {
 			os.RemoveAll(targetDir)
 			result <- fmt.Errorf("applying actions failed: %w", err)
 			return
@@ -183,12 +189,16 @@ func (s *System) Serve(profile string) error {
 
 // buildPatternActions builds a PatternActions slice allowing to
 // insert additional info if necessary.
-func (s *System) buildPatternActions() PatternActions {
+func (s *System) buildPatternActions() (PatternActions, error) {
+	signing, err := encloseSignFile(s.key)
+	if err != nil {
+		return nil, fmt.Errorf("creating signing failed: %w", err)
+	}
 	return PatternActions{
 		{regexp.MustCompile(`csaf-feed-tlp-[^\.]*\.json$`), nil},
 		{regexp.MustCompile(`(provider-metadata|service|category)[^\.]*\.json$`), nil},
-		{regexp.MustCompile(`\.json$`), []Action{hashFile, encloseSignFile(s.keyring)}},
-	}
+		{regexp.MustCompile(`\.json$`), []Action{hashFile, signing}},
+	}, nil
 }
 
 // update checks the git repo for update and invalidates providers
