@@ -225,18 +225,21 @@ func (s *System) update() {
 }
 
 // fillTemplateData fills in the data needed to be interpolated into the templates.
-func (s *System) fillTemplateData(profile string) *TemplateData {
-	r := strings.NewReplacer(
-		"{protocol}", s.cfg.Web.Protocol,
-		"{host}", s.cfg.Web.Host,
-		"{port}", strconv.Itoa(s.cfg.Web.Port),
-		"{profile}", profile,
+func (s *System) fillTemplateData(profile string) *templateData {
+	var (
+		r = strings.NewReplacer(
+			"{protocol}", s.cfg.Web.Protocol,
+			"{host}", s.cfg.Web.Host,
+			"{port}", strconv.Itoa(s.cfg.Web.Port),
+			"{profile}", profile,
+		)
+		baseURL     = r.Replace(s.cfg.Providers.BaseURL)
+		fingerprint = s.key.GetFingerprint()
+		keyURL      = baseURL + "/" + s.key.GetHexKeyID() + ".asc"
 	)
-	baseURL := r.Replace(s.cfg.Providers.BaseURL)
-	fmt.Println(baseURL)
-	keyURL := baseURL + "/" + s.key.GetHexKeyID() + ".asc"
-	return &TemplateData{
-		BaseURL:             baseURL,
-		PublicOpenPGPKeyURL: keyURL,
+	return &templateData{
+		BaseURL:                     baseURL,
+		PublicOpenPGPKeyFingerprint: fingerprint,
+		PublicOpenPGPKeyURL:         keyURL,
 	}
 }

@@ -24,11 +24,12 @@ import (
 	"strings"
 )
 
-// TemplateData is a collection of strings which need to
+// templateData is a collection of strings which need to
 // be defined when building the system
-type TemplateData struct {
-	BaseURL             string
-	PublicOpenPGPKeyURL string
+type templateData struct {
+	BaseURL                     string
+	PublicOpenPGPKeyFingerprint string
+	PublicOpenPGPKeyURL         string
 }
 
 type (
@@ -45,7 +46,7 @@ type (
 
 // templateFromTar deserializes files from a tar stream as templates
 // and instantiate them with the given template data.
-func templateFromTar(targetDir string, data *TemplateData) func(io.Reader) error {
+func templateFromTar(targetDir string, data *templateData) func(io.Reader) error {
 	return func(r io.Reader) error {
 		tr := tar.NewReader(r)
 		for {
