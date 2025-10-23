@@ -13,7 +13,11 @@ package web
 
 import (
 	"errors"
+	"html/template"
+	"log/slog"
+	"maps"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/csaf-testsuite/contravider/pkg/config"
@@ -45,15 +49,43 @@ func (c *Controller) validate(user, pass string) bool {
 }
 */
 
+const indexTmplText = `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Contravider</title>
+  </head>
+  <body>
+    <h1>Contravider</h1>
+	<p>
+	<h2>Available profiles:</h2>
+	{{ range .Profiles }}
+	<a href="{{ . }}">{{ . }}</a><br>
+	{{ end }}
+	</p>
+  </body>
+</html>
+`
+
+var indexTmpl = template.Must(template.New("index").Parse(indexTmplText))
+
 // profiles serves profiles.
 func (c *Controller) profiles(rw http.ResponseWriter, req *http.Request) {
 	path := strings.TrimLeft(req.URL.Path, "/")
-	parts := strings.SplitN(path, "/", 2)
-	if len(parts) < 1 {
-		http.NotFound(rw, req)
+	profile, _, _ := strings.Cut(path, "/")
+	if profile == "" {
+		// List available profiles.
+		profiles := slices.Collect(maps.Keys(c.cfg.Providers.Profiles))
+		slices.Sort(profiles)
+		if err := indexTmpl.Execute(rw, struct {
+			Profiles []string
+		}{
+			Profiles: profiles,
+		}); err != nil {
+			slog.Error("cannot write index template", "error", err)
+		}
 		return
 	}
-	switch err := c.sys.Serve(parts[0]); {
+	switch err := c.sys.Serve(profile); {
 	case errors.Is(err, providers.ErrProfileNotFound):
 		http.NotFound(rw, req)
 		return
