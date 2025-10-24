@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/BurntSushi/toml"
@@ -40,9 +41,9 @@ type (
 	}
 	// Directory is recursive structure to model a directory tree.
 	Directory struct {
-		Name       string        `json:"name"`
-		Folders    []*Directory  `json:"folders,omitempty"`
-		Attributes []*Attributes `json:"attributes,omitempty"`
+		Name       string       `json:"name"`
+		Folders    []*Directory `json:"folders,omitempty"`
+		Attributes *Attributes  `json:"attributes,omitempty"`
 	}
 )
 
@@ -51,17 +52,33 @@ type DirectoryBuilder struct {
 	root *Directory
 }
 
+// addDirectives adds directives to the virtual tree.
 func (tb *DirectoryBuilder) addDirectives(path []string, r io.Reader) error {
-
 	var d Directives
 	if _, err := toml.NewDecoder(r).Decode(&d); err != nil {
 		return fmt.Errorf(
 			"parsing directives %q failed: %w",
 			strings.Join(path, "/"), err)
 	}
-
-	// TODO: Implement me!
-
+	curr := tb.root
+	if curr == nil {
+		curr = &Directory{}
+		tb.root = curr
+	}
+	for _, part := range path[:len(path)-1] {
+		if idx := slices.IndexFunc(curr.Folders, func(f *Directory) bool {
+			return f.Name == part
+		}); idx == -1 {
+			folder := &Directory{Name: part}
+			curr.Folders = append(curr.Folders, folder)
+			curr = folder
+		} else {
+			curr = curr.Folders[idx]
+		}
+	}
+	curr.Attributes = &Attributes{
+		Protection: d.Protection,
+	}
 	return nil
 }
 

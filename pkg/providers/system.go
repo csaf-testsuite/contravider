@@ -156,8 +156,9 @@ func (s *System) Serve(profile string) error {
 
 		// If we have directives store them in the root folder of the export.
 		if directories := directivesBuilder.Directories(); directories != nil {
-			directivesFile := path.Join(targetDir, ".directories.json")
-			if err := directories.WriteToFile(directivesFile); err != nil {
+			directoriesFile := path.Join(targetDir, ".directories.json")
+			slog.Debug("writing directories file", "file", directoriesFile)
+			if err := directories.WriteToFile(directoriesFile); err != nil {
 				errExit(fmt.Errorf(
 					"storing directories file for profile %q failed: %w",
 					profile, err))
@@ -202,7 +203,7 @@ func (s *System) buildPatternActions() (PatternActions, error) {
 	}
 	return PatternActions{
 		{regexp.MustCompile(`csaf-feed-tlp-[^\.]*\.json$`), nil},
-		{regexp.MustCompile(`(provider-metadata|service|category)[^\.]*\.json$`), nil},
+		{regexp.MustCompile(`(\.directories|provider-metadata|service|category)[^\.]*\.json$`), nil},
 		{regexp.MustCompile(`\.json$`), []Action{hashFile, signing}},
 	}, nil
 }

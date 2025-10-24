@@ -71,6 +71,7 @@ func templateFromTar(
 			case tar.TypeReg:
 				// Handle directives files.
 				if parts[len(parts)-1] == ".directives.toml" {
+					slog.Debug("directives found", "path", hdr.Name)
 					if err := directives(parts[1:], tr); err != nil {
 						return fmt.Errorf("parsing directives file failed: %w", err)
 					}
