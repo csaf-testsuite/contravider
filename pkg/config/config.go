@@ -64,8 +64,6 @@ type Web struct {
 	Port     int    `toml:"port"`
 	Protocol string `toml:"protocol"`
 	Root     string `toml:"root"`
-	Username string `toml:"username"`
-	Password string `toml:"password"`
 }
 
 // Signing are the options needed to sign the advisories.
