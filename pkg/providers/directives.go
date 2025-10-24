@@ -35,15 +35,11 @@ type (
 )
 
 type (
-	// Attributes are the attributes of a folder.
-	Attributes struct {
-		Protection *Protection `json:"protection,omitempty"`
-	}
 	// Directory is recursive structure to model a directory tree.
 	Directory struct {
 		Name       string       `json:"name"`
 		Folders    []*Directory `json:"folders,omitempty"`
-		Attributes *Attributes  `json:"attributes,omitempty"`
+		Protection *Protection  `json:"protection,omitempty"`
 	}
 )
 
@@ -76,9 +72,7 @@ func (tb *DirectoryBuilder) addDirectives(path []string, r io.Reader) error {
 			curr = curr.Folders[idx]
 		}
 	}
-	curr.Attributes = &Attributes{
-		Protection: d.Protection,
-	}
+	curr.Protection = d.Protection
 	return nil
 }
 
@@ -127,8 +121,8 @@ func (d *Directory) FindProtection(path []string) *Protection {
 			return nil
 		}
 		next := d.Folders[idx]
-		if next.Attributes != nil && next.Attributes.Protection != nil {
-			return next.Attributes.Protection
+		if next.Protection != nil {
+			return next.Protection
 		}
 		d = next
 	}
