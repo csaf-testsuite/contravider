@@ -136,38 +136,55 @@ func (s *System) Serve(profile string) error {
 			return
 		}
 
-		untar := templateFromTar(targetDir, s.fillTemplateData(profile))
+		errExit := func(err error) {
+			// Ensure that the debris is always removed.
+			os.RemoveAll(targetDir)
+			result <- err
+		}
+
+		directivesBuilder := &DirectoryBuilder{}
+
+		untar := templateFromTar(
+			targetDir,
+			s.fillTemplateData(profile),
+			directivesBuilder.addDirectives)
 
 		if err := mergeBranches(s.cfg.Providers.WorkDir, branches, untar); err != nil {
-			os.RemoveAll(targetDir)
-			result <- fmt.Errorf("merging profile %q failed: %w", profile, err)
+			errExit(fmt.Errorf("merging profile %q failed: %w", profile, err))
 			return
+		}
+
+		// If we have directives store them in the root folder of the export.
+		if directories := directivesBuilder.Directories(); directories != nil {
+			directivesFile := path.Join(targetDir, ".directories.json")
+			if err := directories.WriteToFile(directivesFile); err != nil {
+				errExit(fmt.Errorf(
+					"storing directories file for profile %q failed: %w",
+					profile, err))
+				return
+			}
 		}
 
 		// Store the public key in the exported directory.
 		if err := writePublicKey(s.key, targetDir); err != nil {
-			os.RemoveAll(targetDir)
-			result <- fmt.Errorf("signing failed: %w", err)
+			errExit(fmt.Errorf("signing failed: %w", err))
 			return
 		}
 
 		// Sign and hash the relevant files.
 		patterns, err := s.buildPatternActions()
 		if err != nil {
-			os.RemoveAll(targetDir)
-			result <- fmt.Errorf("building patterns failed: %w", err)
+			errExit(fmt.Errorf("building patterns failed: %w", err))
 			return
 		}
 		if err := patterns.Apply(targetDir); err != nil {
-			os.RemoveAll(targetDir)
-			result <- fmt.Errorf("applying actions failed: %w", err)
+			errExit(fmt.Errorf("applying actions failed: %w", err))
 			return
 		}
 
 		// Create a symlink for the profile.
 		if err := os.Symlink(targetDir, profileDir); err != nil {
-			os.RemoveAll(targetDir)
-			result <- fmt.Errorf("symlinking profile %q failed: %w", profile, err)
+			errExit(fmt.Errorf("symlinking profile %q failed: %w", profile, err))
 			return
 		}
 

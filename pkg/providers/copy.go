@@ -46,7 +46,11 @@ type (
 
 // templateFromTar deserializes files from a tar stream as templates
 // and instantiate them with the given template data.
-func templateFromTar(targetDir string, data *templateData) func(io.Reader) error {
+func templateFromTar(
+	targetDir string,
+	data *templateData,
+	directives func([]string, io.Reader) error,
+) func(io.Reader) error {
 	return func(r io.Reader) error {
 		tr := tar.NewReader(r)
 		for {
@@ -65,7 +69,14 @@ func templateFromTar(targetDir string, data *templateData) func(io.Reader) error
 			parts[0] = targetDir // prefix with targetDir
 			switch name := path.Join(parts...); hdr.Typeflag {
 			case tar.TypeReg:
-				slog.Debug("create file", "file", name)
+				// Handle directives files.
+				if parts[len(parts)-1] == ".directives.toml" {
+					if err := directives(parts[1:], tr); err != nil {
+						return fmt.Errorf("parsing directives file failed: %w", err)
+					}
+					// directives files are not stored in the export.
+					continue
+				}
 				content, err := io.ReadAll(tr)
 				if err != nil {
 					return fmt.Errorf("cannot read data of %q: %w", hdr.Name, err)
