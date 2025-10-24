@@ -95,3 +95,47 @@ func (d *Directory) WriteToFile(path string) error {
 	}
 	return errors.Join(json.NewEncoder(f).Encode(d), f.Close())
 }
+
+// LoadDirectory loads a directory tree from a file.
+func LoadDirectory(path string) (*Directory, error) {
+	f, err := os.Open(path)
+	switch {
+	case errors.Is(err, os.ErrNotExist):
+		return &Directory{}, nil
+	case err != nil:
+		return nil, fmt.Errorf("opening directory failed: %w", err)
+	}
+	defer f.Close()
+	var dir Directory
+	if err := json.NewDecoder(f).Decode(&dir); err != nil {
+		return nil, fmt.Errorf("loading directory failed: %w", err)
+	}
+	return &dir, nil
+}
+
+// FindProtection traverses the given path and returns the first
+// directory with a valid protection.
+func (d *Directory) FindProtection(path []string) *Protection {
+	for _, part := range path {
+		if part == "" {
+			continue
+		}
+		idx := slices.IndexFunc(d.Folders, func(f *Directory) bool {
+			return f.Name == part
+		})
+		if idx == -1 {
+			return nil
+		}
+		next := d.Folders[idx]
+		if next.Attributes != nil && next.Attributes.Protection != nil {
+			return next.Attributes.Protection
+		}
+		d = next
+	}
+	return nil
+}
+
+// Validate checks if user and password match the configured ones.
+func (p *Protection) Validate(user, password string) bool {
+	return p.User == user && p.Password == password
+}
