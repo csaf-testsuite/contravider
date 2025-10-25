@@ -10,10 +10,10 @@
 
 # Logging configuration
 #[log]
-#file = "contravider.log"
-#level = "INFO"        # Options: DEBUG, INFO, WARN, ERROR
+#file   = "contravider.log"
+#level  = "INFO"        # Options: DEBUG, INFO, WARN, ERROR
 #source = false
-#json = false
+#json   = false
 
 # Signing key
 #[signing]
