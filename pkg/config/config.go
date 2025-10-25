@@ -36,6 +36,8 @@ const (
 	defaultWebPort     = 8083
 	defaultWebProtocol = "https"
 	defaultWebRoot     = "web"
+	defaultWebCertFile = ""
+	defaultWebKeyFile  = ""
 )
 
 const (
@@ -64,6 +66,8 @@ type Web struct {
 	Port     int    `toml:"port"`
 	Protocol string `toml:"protocol"`
 	Root     string `toml:"root"`
+	CertFile string `toml:"cert_file"`
+	KeyFile  string `toml:"key_file"`
 }
 
 // Signing are the options needed to sign the advisories.
@@ -109,6 +113,8 @@ func Load(file string) (*Config, error) {
 			Port:     defaultWebPort,
 			Protocol: defaultWebProtocol,
 			Root:     defaultWebRoot,
+			CertFile: defaultWebCertFile,
+			KeyFile:  defaultWebKeyFile,
 		},
 		Signing: Signing{
 			Key:        defaultSigningKey,
@@ -154,6 +160,8 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"CONTRAVIDER_WEB_PORT", storeInt(&cfg.Web.Port)},
 		envStore{"CONTRAVIDER_WEB_PROTOCOL", storeString(&cfg.Web.Protocol)},
 		envStore{"CONTRAVIDER_WEB_ROOT", storeString(&cfg.Web.Root)},
+		envStore{"CONTRAVIDER_WEB_CERT_FILE", storeString(&cfg.Web.CertFile)},
+		envStore{"CONTRAVIDER_WEB_KEY_FILE", storeString(&cfg.Web.KeyFile)},
 		envStore{"CONTRAVIDER_SIGNING_KEY", storeString(&cfg.Signing.Key)},
 		envStore{"CONTRAVIDER_PROVIDERS_GIT_URL", storeString(&cfg.Providers.GitURL)},
 		envStore{"CONTRAVIDER_PROVIDERS_BASE_URL", storeString(&cfg.Providers.BaseURL)},

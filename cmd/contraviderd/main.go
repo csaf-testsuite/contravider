@@ -13,6 +13,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"flag"
 	"fmt"
 	"log/slog"
@@ -79,6 +80,20 @@ func run(cfg *config.Config) error {
 		if err := os.Chmod(host, 0777); err != nil {
 			return fmt.Errorf("cannot change rights on socket: %w", err)
 		}
+		listener = l
+	} else if c, k := cfg.Web.CertFile, cfg.Web.KeyFile; c != " " && k != "" {
+		// TLS server?
+		cert, err := tls.LoadX509KeyPair(c, k)
+		if err != nil {
+			return fmt.Errorf("cannot load certificate: %w", err)
+		}
+		tlsConfig := &tls.Config{Certificates: []tls.Certificate{cert}}
+		addr := net.JoinHostPort(host, strconv.Itoa(cfg.Web.Port))
+		l, err := tls.Listen("tcp", addr, tlsConfig)
+		if err != nil {
+			return fmt.Errorf("cannot listen to tls: %w", err)
+		}
+		defer l.Close()
 		listener = l
 	}
 

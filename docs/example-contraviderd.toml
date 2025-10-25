@@ -17,15 +17,17 @@
 
 # Signing key
 #[signing]
-#key        = "privatekey.asc"
+#key        = "privatekey.asc" # Used to sign the advisories.
 #passphrase = ""
 
 # Web server configuration
 #[web]
-#host     = "localhost"
-#port     = 8083
-#protocol = "https"
-#root     = "web"
+#host      = "localhost"
+#port      = 8083
+#protocol  = "https"
+#root      = "web"
+#cert_file = "" # Set these two to the public/private key of the server
+#key_file  = "" # if you want to run an HTTPS/TLS server.
 
 [providers]
 #git_url             = "https://github.com/csaf-testsuite/distribution.git"
