@@ -88,8 +88,7 @@ func run(cfg *config.Config) error {
 			return fmt.Errorf("cannot load certificate: %w", err)
 		}
 		tlsConfig := &tls.Config{Certificates: []tls.Certificate{cert}}
-		addr := net.JoinHostPort(host, strconv.Itoa(cfg.Web.Port))
-		l, err := tls.Listen("tcp", addr, tlsConfig)
+		l, err := tls.Listen("tcp", cfg.Web.Addr(), tlsConfig)
 		if err != nil {
 			return fmt.Errorf("cannot listen to tls: %w", err)
 		}
