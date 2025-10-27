@@ -17,56 +17,48 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"path/filepath"
 
-	"github.com/ProtonMail/gopenpgp/v2/crypto"
+	"github.com/ProtonMail/gopenpgp/v3/crypto"
 )
 
 // prepareKeyRing unlocks and returns a reusable KeyRing for signing.
-func prepareKeyRing(armoredPrivateKeyPath string, passphrase string) (*crypto.KeyRing, error) {
+func prepareKeyRing(armoredPrivateKeyPath string, passphrase string) (*crypto.Key, error) {
 	// read armored private key as bytes from file
 	armoredPrivateKeyByte, err := os.ReadFile(armoredPrivateKeyPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load private key: %w", err)
 	}
-	privateKeyObj, err := crypto.NewKeyFromArmored(string(armoredPrivateKeyByte))
+	privateKey, err := crypto.NewKeyFromArmored(string(armoredPrivateKeyByte))
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse private key: %w", err)
 	}
-	// ToDo: Evaluate: Locking even worth it?
-	unlockedKeyObj, err := privateKeyObj.Unlock([]byte(passphrase))
-	if err != nil {
-		return nil, fmt.Errorf("failed to unlock private key: %w", err)
+	if passphrase != "" {
+		privateKey, err = privateKey.Unlock([]byte(passphrase))
+		if err != nil {
+			return nil, fmt.Errorf("failed to unlock private key: %w", err)
+		}
 	}
-
-	signingKeyRing, err := crypto.NewKeyRing(unlockedKeyObj)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create keyring: %w", err)
-	}
-
-	return signingKeyRing, nil
+	return privateKey, nil
 }
 
-// signFileWithKeyRing signs a file using an unlocked KeyRing.
-func signFileWithKeyRing(filePath string, signingKeyRing *crypto.KeyRing) error {
+// signFileWithKey signs a file using an unlocked key.
+// func signFileWithKey(filePath string, signingKey *crypto.Key) error {
+func signFileWithKey(filePath string, signer crypto.PGPSign) error {
 	// Read content of file to sign
 	fileData, err := os.ReadFile(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to read file: %w", err)
 	}
 
-	message := crypto.NewPlainMessage(fileData)
-	pgpSignature, err := signingKeyRing.SignDetached(message)
+	armored, err := signer.Sign(fileData, crypto.Armor)
 	if err != nil {
 		return fmt.Errorf("failed to sign message: %w", err)
 	}
 
 	signPath := filePath + ".asc"
-	armor, err := pgpSignature.GetArmored()
-	if err != nil {
-		return fmt.Errorf("failed to armor signature: %w", err)
-	}
-	if err := os.WriteFile(signPath, []byte(armor), 0644); err != nil {
+	if err := os.WriteFile(signPath, []byte(armored), 0644); err != nil {
 		return fmt.Errorf("failed to write signature to file: %w", err)
 	}
 	return nil
@@ -130,18 +122,23 @@ func writeFileHashes(filePath string, writeSha256 bool, writeSha512 bool) error 
 }
 
 // encloseSignFile creates an action that signs a file with a keyring parameter.
-func encloseSignFile(signingKeyRing *crypto.KeyRing) Action {
+func encloseSignFile(signingKey *crypto.Key) (Action, error) {
+	pgp := crypto.PGP()
+	signer, err := pgp.Sign().SigningKey(signingKey).Detached().New()
+	if err != nil {
+		return nil, fmt.Errorf("building signer failed: %w", err)
+	}
 	return func(file string, _ os.FileInfo) error {
 		// the files to be checked and created
 		fileSignature := file + ".asc"
 		// write Signature if it doesn't exist
 		if checkFileNotExists(fileSignature) {
-			if err := signFileWithKeyRing(file, signingKeyRing); err != nil {
+			if err := signFileWithKey(file, signer); err != nil {
 				return fmt.Errorf("failed to sign file: %w", err)
 			}
 		}
 		return nil
-	}
+	}, nil
 }
 
 // hashFile checks whether a file needs to be hashed and then hashes it.
@@ -164,4 +161,18 @@ func hashFile(file string, _ os.FileInfo) error {
 func checkFileNotExists(filePath string) bool {
 	_, err := os.Stat(filePath)
 	return errors.Is(err, os.ErrNotExist)
+}
+
+// writePublicKey writes the public key into the target directory.
+func writePublicKey(key *crypto.Key, targetDir string) error {
+	asc, err := key.GetArmoredPublicKey()
+	if err != nil {
+		return fmt.Errorf("cannot get public key: %w", err)
+	}
+	hexid := key.GetHexKeyID()
+	path := path.Join(targetDir, hexid+".asc")
+	if err := os.WriteFile(path, []byte(asc), 0666); err != nil {
+		return fmt.Errorf("cannot write public key to %q: %w", path, err)
+	}
+	return nil
 }

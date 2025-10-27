@@ -12,7 +12,14 @@
 package web
 
 import (
+	"errors"
+	"html/template"
+	"log/slog"
+	"maps"
 	"net/http"
+	"path/filepath"
+	"slices"
+	"strings"
 
 	"github.com/csaf-testsuite/contravider/pkg/config"
 	"github.com/csaf-testsuite/contravider/pkg/middleware"
@@ -37,7 +44,7 @@ func NewController(
 }
 
 // validate checks the supplied credentials based on the route.
-func (c *Controller) validate(route string, user, pass string) bool {
+func (c *Controller) validate(route, user, pass string) bool {
 	switch route {
 	case "/.well-known/csaf/amber/":
 		return user == c.cfg.Web.UsernameAmber && pass == c.cfg.Web.PasswordAmber
@@ -46,6 +53,84 @@ func (c *Controller) validate(route string, user, pass string) bool {
 	default:
 		return false
 	}
+}
+
+// indexTmplText is a HTML template listing the available profiles.
+const indexTmplText = `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Contravider</title>
+  </head>
+  <body>
+    <h1>Contravider</h1>
+    <p>
+      <h2>Available profiles:</h2>
+      <ul>
+      {{ range .Profiles }}
+      <li><a href="{{ . }}">{{ . }}</a></li>
+      {{ end }}
+      </ul>
+    </p>
+  </body>
+</html>
+`
+
+var indexTmpl = template.Must(template.New("index").Parse(indexTmplText))
+
+// profiles serves profiles.
+func (c *Controller) profiles(rw http.ResponseWriter, req *http.Request) {
+	path := strings.TrimLeft(req.URL.Path, "/")
+	parts := strings.Split(path, "/")
+	if len(parts) == 0 || parts[0] == "" {
+		// List available profiles.
+		profiles := slices.Collect(maps.Keys(c.cfg.Providers.Profiles))
+		slices.Sort(profiles)
+		if err := indexTmpl.Execute(rw, struct {
+			Profiles []string
+		}{
+			Profiles: profiles,
+		}); err != nil {
+			slog.Error("cannot write index template", "error", err)
+		}
+		return
+	}
+	// Don't leak the directories file.
+	if parts[len(parts)-1] == ".directories.json" {
+		http.Error(rw, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	// Request the profile to get instantiated.
+	profile := parts[0]
+	switch err := c.sys.Serve(profile); {
+	case errors.Is(err, providers.ErrProfileNotFound):
+		http.NotFound(rw, req)
+		return
+	case err != nil:
+		http.Error(rw,
+			"internal server error: "+err.Error(),
+			http.StatusInternalServerError)
+		return
+	}
+	// Check for directories.
+	dirFile := filepath.Join(c.cfg.Web.Root, profile, ".directories.json")
+	dir, err := providers.LoadDirectory(dirFile)
+	if err != nil {
+		slog.Error("cannot load directory", "profile", profile, "error", err)
+		http.Error(rw,
+			"internal server error: "+err.Error(),
+			http.StatusInternalServerError)
+		return
+	}
+	// Check if an authentication is needed.
+	if protection := dir.FindProtection(parts[1:]); protection != nil {
+		user, password, ok := req.BasicAuth()
+		if !ok || !protection.Validate(user, password) {
+			rw.Header().Set("WWW-Authenticate", `Basic realm="restricted"`)
+			http.Error(rw, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+	}
+	http.FileServer(http.Dir(c.cfg.Web.Root)).ServeHTTP(rw, req)
 }
 
 // Bind returns an http.Handler to be used in a web server.

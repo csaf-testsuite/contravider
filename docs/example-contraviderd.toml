@@ -1,0 +1,43 @@
+# This file is Free Software under the Apache-2.0 License
+# without warranty, see README.md and LICENSE for details.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# SPDX-FileCopyrightText: 2025 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
+# Software-Engineering:
+# * 2025 Intevation GmbH <https://intevation.de>
+# * 2025 Fraunhofer Institute for Applied an Integrated Security (AISEC) <https://aisec.fraunhofer.de>
+
+# Logging configuration
+#[log]
+#file   = "contravider.log"
+#level  = "INFO"        # Options: DEBUG, INFO, WARN, ERROR
+#source = false
+#json   = false
+
+# Signing key
+#[signing]
+#key        = "privatekey.asc" # Used to sign the advisories.
+#passphrase = ""
+
+# Web server configuration
+#[web]
+#host      = "localhost"
+#port      = 8083
+#protocol  = "https"
+#root      = "web"
+#cert_file = "" # Set these two to the public/private key of the server
+#key_file  = "" # if you want to run an HTTPS/TLS server.
+username_amber = "alice"
+password_amber = "secret"
+username_red = "bob"
+password_red = "secret"
+
+[providers]
+#git_url             = "https://github.com/csaf-testsuite/distribution.git"
+#update              = "5m"
+#base_url            = "{protocol}://{host}:{port}/{profile}"
+#workdir             = "checkout"
+result               = "checkout/result/html"
+profiles.index_txt   = ["main", "7.1.12_Requirement_12_index.txt"]
+profiles.changes_csv = ["main", "7.1.13_Requirement_13_changes.csv"]

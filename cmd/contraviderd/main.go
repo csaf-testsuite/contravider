@@ -13,6 +13,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"flag"
 	"fmt"
 	"log/slog"
@@ -80,6 +81,19 @@ func run(cfg *config.Config) error {
 			return fmt.Errorf("cannot change rights on socket: %w", err)
 		}
 		listener = l
+	} else if c, k := cfg.Web.CertFile, cfg.Web.KeyFile; c != " " && k != "" {
+		// TLS server?
+		cert, err := tls.LoadX509KeyPair(c, k)
+		if err != nil {
+			return fmt.Errorf("cannot load certificate: %w", err)
+		}
+		tlsConfig := &tls.Config{Certificates: []tls.Certificate{cert}}
+		l, err := tls.Listen("tcp", cfg.Web.Addr(), tlsConfig)
+		if err != nil {
+			return fmt.Errorf("cannot listen to tls: %w", err)
+		}
+		defer l.Close()
+		listener = l
 	}
 
 	srvErrors := make(chan error)
@@ -95,14 +109,6 @@ func run(cfg *config.Config) error {
 			srvErrors <- err
 		}
 	}()
-
-	/*
-		go func() {
-			if err := sys.Serve("changes_csv"); err != nil {
-				slog.Error("serving profile failed", "error", err)
-			}
-		}()
-	*/
 
 	select {
 	case <-ctx.Done():
