@@ -22,7 +22,6 @@ import (
 	"strings"
 
 	"github.com/csaf-testsuite/contravider/pkg/config"
-	"github.com/csaf-testsuite/contravider/pkg/middleware"
 	"github.com/csaf-testsuite/contravider/pkg/providers"
 )
 
@@ -41,18 +40,6 @@ func NewController(
 		cfg: cfg,
 		sys: sys,
 	}, nil
-}
-
-// validate checks the supplied credentials based on the route.
-func (c *Controller) validate(route, user, pass string) bool {
-	switch route {
-	case "/.well-known/csaf/amber/":
-		return user == c.cfg.Web.UsernameAmber && pass == c.cfg.Web.PasswordAmber
-	case "/.well-known/csaf/red/":
-		return user == c.cfg.Web.UsernameRed && pass == c.cfg.Web.PasswordRed
-	default:
-		return false
-	}
 }
 
 // indexTmplText is a HTML template listing the available profiles.
@@ -136,55 +123,6 @@ func (c *Controller) profiles(rw http.ResponseWriter, req *http.Request) {
 // Bind returns an http.Handler to be used in a web server.
 func (c *Controller) Bind() http.Handler {
 	router := http.NewServeMux()
-	mw := middleware.NewMiddleware(c.cfg)
-
-	for _, route := range []struct {
-		pattern string
-		handler http.Handler
-	}{
-		// public files
-		{"/.well-known/csaf/provider-metadata.json",
-			mw.ServeFile(c.cfg.Providers.Result),
-		},
-		{"/.well-known/csaf/service.json",
-			mw.ServeFile(c.cfg.Providers.Result),
-		},
-		{"/.well-known/security.txt",
-			mw.ServeFile(c.cfg.Providers.Result),
-		},
-		// public folders
-		{
-			"/.well-known/csaf/white/",
-			http.FileServer(http.Dir(c.cfg.Providers.Result)),
-		},
-		{
-			"/.well-known/csaf/green/",
-			http.FileServer(http.Dir(c.cfg.Providers.Result)),
-		},
-		// protected folders using basic auth (middleware)
-		{
-			"/.well-known/csaf/amber/",
-			mw.BasicAuth(
-				http.FileServer(http.Dir(c.cfg.Providers.Result)),
-				func(user, pass string) bool {
-					return c.validate("/.well-known/csaf/amber/", user, pass)
-				},
-				"amber-realm",
-			),
-		},
-		{
-			"/.well-known/csaf/red/",
-			mw.BasicAuth(
-				http.FileServer(http.Dir(c.cfg.Providers.Result)),
-				func(user, pass string) bool {
-					return c.validate("/.well-known/csaf/red/", user, pass)
-				},
-				"red-realm",
-			),
-		},
-	} {
-		router.Handle(route.pattern, route.handler)
-	}
-
+	router.HandleFunc("/", c.profiles)
 	return router
 }

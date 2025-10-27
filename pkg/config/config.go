@@ -63,16 +63,12 @@ type Log struct {
 
 // Web are the config options for the web interface.
 type Web struct {
-	Host          string `toml:"host"`
-	Port          int    `toml:"port"`
-	Protocol      string `toml:"protocol"`
-	Root          string `toml:"root"`
-	CertFile      string `toml:"cert_file"`
-	UsernameAmber string `toml:"username_amber"`
-	PasswordAmber string `toml:"password_amber"`
-	UsernameRed   string `toml:"username_red"`
-	PasswordRed   string `toml:"password_red"`
-	KeyFile       string `toml:"key_file"`
+	Host     string `toml:"host"`
+	Port     int    `toml:"port"`
+	Protocol string `toml:"protocol"`
+	Root     string `toml:"root"`
+	CertFile string `toml:"cert_file"`
+	KeyFile  string `toml:"key_file"`
 }
 
 // Signing are the options needed to sign the advisories.

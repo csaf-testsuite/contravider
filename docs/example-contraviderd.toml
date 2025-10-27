@@ -28,10 +28,6 @@
 #root      = "web"
 #cert_file = "" # Set these two to the public/private key of the server
 #key_file  = "" # if you want to run an HTTPS/TLS server.
-username_amber = "alice"
-password_amber = "secret"
-username_red = "bob"
-password_red = "secret"
 
 [providers]
 #git_url             = "https://github.com/csaf-testsuite/distribution.git"
