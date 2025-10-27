@@ -23,6 +23,7 @@ import (
 
 	"github.com/csaf-testsuite/contravider/pkg/config"
 	"github.com/csaf-testsuite/contravider/pkg/providers"
+	"github.com/csaf-testsuite/contravider/pkg/version"
 )
 
 // Controller binds the endpoints to the internal logic.
@@ -49,7 +50,7 @@ const indexTmplText = `<!DOCTYPE html>
     <title>Contravider</title>
   </head>
   <body>
-    <h1>Contravider</h1>
+    <h1>Contravider v{{ .Version }}</h1>
     <p>
       <h2>Available profiles:</h2>
       <ul>
@@ -64,21 +65,29 @@ const indexTmplText = `<!DOCTYPE html>
 
 var indexTmpl = template.Must(template.New("index").Parse(indexTmplText))
 
+// renderProfilesList renders an overview over the profiles available
+// on this server.
+func (c *Controller) renderProfilesList(rw http.ResponseWriter) {
+	profiles := slices.Collect(maps.Keys(c.cfg.Providers.Profiles))
+	slices.Sort(profiles)
+	if err := indexTmpl.Execute(rw, struct {
+		Version  string
+		Profiles []string
+	}{
+		Version:  version.SemVersion,
+		Profiles: profiles,
+	}); err != nil {
+		slog.Error("cannot write index template", "error", err)
+	}
+}
+
 // profiles serves profiles.
 func (c *Controller) profiles(rw http.ResponseWriter, req *http.Request) {
 	path := strings.TrimLeft(req.URL.Path, "/")
 	parts := strings.Split(path, "/")
 	if len(parts) == 0 || parts[0] == "" {
 		// List available profiles.
-		profiles := slices.Collect(maps.Keys(c.cfg.Providers.Profiles))
-		slices.Sort(profiles)
-		if err := indexTmpl.Execute(rw, struct {
-			Profiles []string
-		}{
-			Profiles: profiles,
-		}); err != nil {
-			slog.Error("cannot write index template", "error", err)
-		}
+		c.renderProfilesList(rw)
 		return
 	}
 	// Don't leak the directories file.
