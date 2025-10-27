@@ -29,18 +29,15 @@ func (lg *Log) Config() error {
 		w = f
 	}
 
-	// Create a multi-writer to output logs to both the file and the console.
-	multiWriter := io.MultiWriter(w, os.Stdout)
-
 	opts := slog.HandlerOptions{
 		AddSource: lg.Source,
 		Level:     lg.Level,
 	}
 	var handler slog.Handler
 	if lg.JSON {
-		handler = slog.NewJSONHandler(multiWriter, &opts)
+		handler = slog.NewJSONHandler(w, &opts)
 	} else {
-		handler = slog.NewTextHandler(multiWriter, &opts)
+		handler = slog.NewTextHandler(w, &opts)
 	}
 	logger := slog.New(handler)
 	slog.SetDefault(logger)
