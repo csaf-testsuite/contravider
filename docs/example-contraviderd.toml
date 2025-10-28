@@ -34,6 +34,5 @@
 #update              = "5m"
 #base_url            = "{protocol}://{host}:{port}/{profile}"
 #workdir             = "checkout"
-result               = "checkout/result/html"
 profiles.index_txt   = ["main", "7.1.12_Requirement_12_index.txt"]
 profiles.changes_csv = ["main", "7.1.13_Requirement_13_changes.csv"]
