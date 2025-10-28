@@ -50,7 +50,7 @@ const (
 const (
 	defaultSigningKey      = "privatekey.asc"
 	defaultPassphrase      = ""
-	deafultProvidersResult = "."
+	defaultProvidersResult = "."
 )
 
 // Log are the config options for the logging.
@@ -126,7 +126,7 @@ func Load(file string) (*Config, error) {
 			GitURL:  defaultProvidersGitURL,
 			BaseURL: defaultProvidersBaseURL,
 			WorkDir: defaultProvidersWorkDir,
-			Result:  deafultProvidersResult,
+			Result:  defaultProvidersResult,
 			Update:  defaultProvidersUpdate,
 		},
 	}
