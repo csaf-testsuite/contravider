@@ -34,5 +34,9 @@
 #update              = "5m"
 #base_url            = "{protocol}://{host}:{port}/{profile}"
 #workdir             = "checkout"
-profiles.index_txt   = ["main", "7.1.12_Requirement_12_index.txt"]
-profiles.changes_csv = ["main", "7.1.13_Requirement_13_changes.csv"]
+# profiles: The following three types of identifiers are available for the classification of the profiles
+# VALID_: This prefix indicates configurations that are set up correctly and comply with established requirements.
+# STANDARD_ERROR_: This prefix is used for misconfigurations that do not meet the requirements of the CSAF standard.
+# KNOWN_ISSUE_: This prefix designates misconfigurations that have already been identified in existing systems.
+profiles.STANDARD_ERROR_index_txt   = ["main", "7.1.12_Requirement_12_index.txt"]
+profiles.STANDARD_ERROR_changes_csv = ["main", "7.1.13_Requirement_13_changes.csv"]
