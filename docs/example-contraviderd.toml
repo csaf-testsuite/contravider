@@ -41,3 +41,4 @@
 profiles.STANDARD_ERROR_index_txt   = ["main", "7.1.12_Requirement_12_index.txt"]
 profiles.STANDARD_ERROR_changes_csv = ["main", "7.1.13_Requirement_13_changes.csv"]
 profiles.STANDARD_ERROR_valid_csaf_document = ["main", "7.1.1_Requirement_1_Valid_CSAF_Document"]
+profiles.STANDARD_ERROR_filename = ["main", "7.1.2_Requirement_2_Filename"]
