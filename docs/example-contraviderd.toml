@@ -38,6 +38,7 @@
 # VALID_: This prefix indicates configurations that are set up correctly and comply with established requirements.
 # STANDARD_ERROR_: This prefix is used for misconfigurations that do not meet the requirements of the CSAF standard.
 # KNOWN_ISSUE_: This prefix designates misconfigurations that have already been identified in existing systems.
+
 # Standard error with main and single branch
 profiles.STANDARD_ERROR_VALID_CSAF_DOCUMENT = ["main", "7.1.1_Requirement_1_Valid_CSAF_Document"]
 profiles.STANDARD_ERROR_FILENAME = ["main", "7.1.2_Requirement_2_Filename"]
@@ -52,3 +53,6 @@ profiles.STANDARD_ERROR_CHANGES_CSV = ["main", "7.1.13_Requirement_13_changes.cs
 profiles.STANDARD_ERROR_ROLIE_FEED = ["main", "7.1.15_Requirement_15_ROLIE_Feed"]
 profiles.STANDARD_ERROR_ROLIE_SERVICE_DOCUMENT = ["main", "7.1.16_Requirement_16_ROLIE_service_document"]
 profiles.STANDARD_ERROR_ROLIE_CATEGORIE_DOCUMENT = ["main", "7.1.17_Requirement_17_ROLIE_category_document"]
+
+# Standard error with main and two branches
+profiles.STANDARD_ERROR_VALID_CSAF_DOCUMENT_AND_FILENAME = ["main", "7.1.1_Requirement_1_Valid_CSAF_Document", "7.1.2_Requirement_2_Filename"]
