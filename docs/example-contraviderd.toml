@@ -38,14 +38,52 @@
 # VALID_: This prefix indicates configurations that are set up correctly and comply with established requirements.
 # STANDARD_ERROR_: This prefix is used for misconfigurations that do not meet the requirements of the CSAF standard.
 # KNOWN_ISSUE_: This prefix designates misconfigurations that have already been identified in existing systems.
+
+# Valid configuration from main branch
+profiles.VALID_MAIN = ["main"]
+
+# Standard error with main and one misconfigured branch
 profiles.STANDARD_ERROR_VALID_CSAF_DOCUMENT = ["main", "7.1.1_Requirement_1_Valid_CSAF_Document"]
 profiles.STANDARD_ERROR_FILENAME = ["main", "7.1.2_Requirement_2_Filename"]
 profiles.STANDARD_ERROR_TLP_WHITE = ["main", "7.1.4_Requirement_4_TLP_WHITE"]
 profiles.STANDARD_ERROR_TLP_AMBER_AND_TLP_RED = ["main", "7.1.5_Requirement_5_TLP_AMBER_and_TLP_RED"]
+# profiles.STANDARD_ERROR_PROVIDER_METADATA_JSON = ["main", "7.1.7_Requirement_7_provider-metadata.json"] TODO: To be added when working
 profiles.STANDARD_ERROR_SECURITY_TXT = ["main", "7.1.8_Requirement_8_security.txt"]
+# profiles.STANDARD_ERROR_WELL_KNOWN_URL_FOR_PROVIDER_METADATA_JSON = ["main", "7.1.9_Requirement_9_Well-known_URL_for_provider-metadata.json"] TODO: To be added when working
 profiles.STANDARD_ERROR_ONE_FOLDER_PER_YEAR = ["main", "7.1.11_Requirement_11_One_folder_per_year"]
 profiles.STANDARD_ERROR_INDEX_TXT   = ["main", "7.1.12_Requirement_12_index.txt"]
 profiles.STANDARD_ERROR_CHANGES_CSV = ["main", "7.1.13_Requirement_13_changes.csv"]
 profiles.STANDARD_ERROR_ROLIE_FEED = ["main", "7.1.15_Requirement_15_ROLIE_Feed"]
 profiles.STANDARD_ERROR_ROLIE_SERVICE_DOCUMENT = ["main", "7.1.16_Requirement_16_ROLIE_service_document"]
 profiles.STANDARD_ERROR_ROLIE_CATEGORIE_DOCUMENT = ["main", "7.1.17_Requirement_17_ROLIE_category_document"]
+
+# Standard error with main and two misconfigured branches
+profiles.STANDARD_ERROR_VALID_CSAF_DOCUMENT_AND_FILENAME = ["main", "7.1.1_Requirement_1_Valid_CSAF_Document", "7.1.2_Requirement_2_Filename"]
+profiles.STANDARD_ERROR_VALID_CSAF_DOCUMENT_AND_TLP_WHITE = ["main", "7.1.1_Requirement_1_Valid_CSAF_Document", "7.1.4_Requirement_4_TLP_WHITE"]
+profiles.STANDARD_ERROR_VALID_CSAF_DOCUMENT_AND_TLP_AMBER_AND_TLP_WHITE = ["main", "7.1.1_Requirement_1_Valid_CSAF_Document", "7.1.5_Requirement_5_TLP_AMBER_and_TLP_RED"]
+profiles.STANDARD_ERROR_VALID_CSAF_DOCUMENT_AND_SECURITY_TXT = ["main", "7.1.1_Requirement_1_Valid_CSAF_Document", "7.1.8_Requirement_8_security.txt"]
+profiles.STANDARD_ERROR_VALID_CSAF_DOCUMENT_AND_ONE_FOLDER_PER_YEAR = ["main", "7.1.1_Requirement_1_Valid_CSAF_Document", "7.1.11_Requirement_11_One_folder_per_year"]
+profiles.STANDARD_ERROR_VALID_CSAF_DOCUMENT_AND_INDEX_TXT = ["main", "7.1.1_Requirement_1_Valid_CSAF_Document", "7.1.12_Requirement_12_index.txt"]
+profiles.STANDARD_ERROR_VALID_CSAF_DOCUMENT_AND_CHANGES_CSV = ["main", "7.1.1_Requirement_1_Valid_CSAF_Document", "7.1.13_Requirement_13_changes.csv"]
+profiles.STANDARD_ERROR_VALID_CSAF_DOCUMENT_AND_ROLIE_FEED = ["main", "7.1.1_Requirement_1_Valid_CSAF_Document", "7.1.15_Requirement_15_ROLIE_Feed"]
+profiles.STANDARD_ERROR_VALID_CSAF_DOCUMENT_AND_ROLIE_SERVICE_DOCUMENT = ["main", "7.1.1_Requirement_1_Valid_CSAF_Document", "7.1.16_Requirement_16_ROLIE_service_document"]
+profiles.STANDARD_ERROR_VALID_CSAF_DOCUMENT_AND_ROLIE_CATEGORIE_DOCUMENT = ["main", "7.1.1_Requirement_1_Valid_CSAF_Document", "7.1.17_Requirement_17_ROLIE_category_document"]
+
+# Standard error with main and three misconfigured branches
+profiles.STANDARD_ERROR_REQ_1_2_4 = ["main", "7.1.1_Requirement_1_Valid_CSAF_Document", "7.1.2_Requirement_2_Filename", "7.1.4_Requirement_4_TLP_WHITE"]
+
+# Standard error with main and four misconfigured branches
+
+# Standard error with main and five misconfigured branches
+
+# Standard error with main and six misconfigured branches
+
+# Standard error with main and seven misconfigured branches
+
+# Standard error with main and eight misconfigured branches
+
+# Standard error with main and nine misconfigured branches
+
+# Standard error with main and ten misconfigured branches
+
+# Standard error with main and eleven misconfigured branches

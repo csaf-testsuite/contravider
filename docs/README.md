@@ -14,12 +14,7 @@
  - [Latest Go](https://go.dev/doc/install)
  - [git](https://git-scm.com/install/linux)
 
-## Configuration
- 
 
 ## How to start
 
  See [the workflow documentation](./workflow.md) on how to get the application running and [the config documentation](./config.md) on how to configure it.
-
-
-
