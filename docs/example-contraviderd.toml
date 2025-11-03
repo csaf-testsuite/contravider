@@ -47,3 +47,5 @@ profiles.STANDARD_ERROR_ONE_FOLDER_PER_YEAR = ["main", "7.1.11_Requirement_11_On
 profiles.STANDARD_ERROR_INDEX_TXT   = ["main", "7.1.12_Requirement_12_index.txt"]
 profiles.STANDARD_ERROR_CHANGES_CSV = ["main", "7.1.13_Requirement_13_changes.csv"]
 profiles.STANDARD_ERROR_ROLIE_FEED = ["main", "7.1.15_Requirement_15_ROLIE_Feed"]
+profiles.STANDARD_ERROR_ROLIE_SERVICE_DOCUMENT = ["main", "7.1.16_Requirement_16_ROLIE_service_document"]
+profiles.STANDARD_ERROR_ROLIE_CATEGORIE_DOCUMENT = ["main", "7.1.17_Requirement_17_ROLIE_category_document"]
