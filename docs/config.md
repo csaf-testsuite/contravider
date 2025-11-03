@@ -1,14 +1,16 @@
-# This file is Free Software under the Apache-2.0 License
-# without warranty, see README.md and LICENSE for details.
-#
-# SPDX-License-Identifier: Apache-2.0
-#
-# SPDX-FileCopyrightText: 2025 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
-# Software-Engineering:
-# * 2025 Intevation GmbH <https://intevation.de>
-# * 2025 Fraunhofer Institute for Applied an Integrated Security (AISEC) <https://aisec.fraunhofer.de>
+<!--
+// This file is Free Software under the Apache-2.0 License
+// without warranty, see README.md and LICENSE for details.
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+// SPDX-FileCopyrightText: 2025 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
+// Software-Engineering:
+// * 2025 Intevation GmbH <https://intevation.de>
+// * 2025 Fraunhofer Institute for Applied an Integrated Security (AISEC) <https://aisec.fraunhofer.de>
+-->
 
-# The `example-contraviderd.toml` configuration file
+## Explanation of the `example-contraviderd.toml` configuration file
 
 The setup of the provider is configured with a [TOML v1.0.0](https://toml.io/en/v1.0.0) file.
 An example file can be found [here](./example-contraviderd.toml)
