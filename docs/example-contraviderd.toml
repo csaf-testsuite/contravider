@@ -61,3 +61,4 @@ profiles.STANDARD_ERROR_ROLIE_CATEGORIE_DOCUMENT = ["main", "7.1.17_Requirement_
 profiles.STANDARD_ERROR_VALID_CSAF_DOCUMENT_AND_FILENAME = ["main", "7.1.1_Requirement_1_Valid_CSAF_Document", "7.1.2_Requirement_2_Filename"]
 profiles.STANDARD_ERROR_VALID_CSAF_DOCUMENT_AND_TLP_WHITE = ["main", "7.1.1_Requirement_1_Valid_CSAF_Document", "7.1.4_Requirement_4_TLP_WHITE"]
 profiles.STANDARD_ERROR_VALID_CSAF_DOCUMENT_AND_TLP_AMBER_AND_TLP_WHITE = ["main", "7.1.1_Requirement_1_Valid_CSAF_Document", "7.1.5_Requirement_5_TLP_AMBER_and_TLP_RED"]
+profiles.STANDARD_ERROR_FILENAME_AND_SECURITY_TXT = ["main", "7.1.1_Requirement_1_Valid_CSAF_Document", "7.1.8_Requirement_8_security.txt"]
