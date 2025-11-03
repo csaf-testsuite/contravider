@@ -1,14 +1,16 @@
-# This file is Free Software under the Apache-2.0 License
-# without warranty, see README.md and LICENSE for details.
-#
-# SPDX-License-Identifier: Apache-2.0
-#
-# SPDX-FileCopyrightText: 2025 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
-# Software-Engineering:
-# * 2025 Intevation GmbH <https://intevation.de>
-# * 2025 Fraunhofer Institute for Applied an Integrated Security (AISEC) <https://aisec.fraunhofer.de>
+<!--
+// This file is Free Software under the Apache-2.0 License
+// without warranty, see README.md and LICENSE for details.
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+// SPDX-FileCopyrightText: 2025 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
+// Software-Engineering:
+// * 2025 Intevation GmbH <https://intevation.de>
+// * 2025 Fraunhofer Institute for Applied an Integrated Security (AISEC) <https://aisec.fraunhofer.de>
+-->
 
-# The `example-contraviderd.toml` configuration file
+## Explanation of the `example-contraviderd.toml` configuration file
 
 The setup of the provider is configured with a [TOML v1.0.0](https://toml.io/en/v1.0.0) file.
 An example file can be found [here](./example-contraviderd.toml)
@@ -57,13 +59,8 @@ profiles: The following three types of identifiers are available for the classif
 The structure is as follows:
 `profiles.Identifier = [profile1, profile2, ...]`
 
-The default examples:
-`profiles.STANDARD_ERROR_VALID_CSAF_DOCUMENT = ["main", "7.1.1_Requirement_1_Valid_CSAF_Document"]`
-`profiles.STANDARD_ERROR_FILENAME = ["main", "7.1.2_Requirement_2_Filename"]`
-`profiles.STANDARD_ERROR_TLP_WHITE = ["main", "7.1.4_Requirement_4_TLP_WHITE"]`
-`profiles.STANDARD_ERROR_TLP_AMBER_AND_TLP_RED = ["main", "7.1.5_Requirement_5_TLP_AMBER_and_TLP_RED"]`
-`profiles.STANDARD_ERROR_SECURITY_TXT = ["main", "7.1.8_Requirement_8_security.txt"]`
-`profiles.STANDARD_ERROR_ONE_FOLDER_PER_YEAR = ["main", "7.1.11_Requirement_11_One_folder_per_year"]`
-`profiles.STANDARD_ERROR_INDEX_TXT   = ["main", "7.1.12_Requirement_12_index.txt"]`
-`profiles.STANDARD_ERROR_CHANGES_CSV = ["main", "7.1.13_Requirement_13_changes.csv"]`
-`profiles.STANDARD_ERROR_ROLIE_FEED = ["main", "7.1.15_Requirement_15_ROLIE_Feed"]`
+Some default examples:
+- `profiles.STANDARD_ERROR_VALID_CSAF_DOCUMENT = ["main", "7.1.1_Requirement_1_Valid_CSAF_Document"]`
+- `profiles.STANDARD_ERROR_FILENAME = ["main", "7.1.2_Requirement_2_Filename"]`
+- `profiles.STANDARD_ERROR_TLP_WHITE = ["main", "7.1.4_Requirement_4_TLP_WHITE"]`
+
