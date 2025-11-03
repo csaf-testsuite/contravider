@@ -39,6 +39,9 @@
 # STANDARD_ERROR_: This prefix is used for misconfigurations that do not meet the requirements of the CSAF standard.
 # KNOWN_ISSUE_: This prefix designates misconfigurations that have already been identified in existing systems.
 
+# Valid configuration from main branch
+profiles.VALID_MAIN = ["main"]
+
 # Standard error with main and single branch
 profiles.STANDARD_ERROR_VALID_CSAF_DOCUMENT = ["main", "7.1.1_Requirement_1_Valid_CSAF_Document"]
 profiles.STANDARD_ERROR_FILENAME = ["main", "7.1.2_Requirement_2_Filename"]
