@@ -18,6 +18,7 @@
 
 - Step 1: Prepare a configuration file. E.g. copy the example-contraviderd.toml and adjust to your needs:
   - `cp docs/example-contraviderd.toml contraviderd.toml`
+  - See [the our config documentation](./config.md) on how to configure your toml file
 - Step 2: Build the contravider executable:
   - `go build ./cmd/contraviderd/`
 
