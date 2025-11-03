@@ -14,10 +14,10 @@
 
 The current contravider is still in development and we're still considering different approaches to solve various problems.
 
-Currently, the serverside encryption is handled via .directives.toml.
+Currently, the serverside protection is handled with HTTP Basic Auth via `.directives.toml` files.
 
-Any encrypted directory contains a .directives.toml
-with the following structure: 
+Any protected directory may contains a .directives.toml
+with the following structure:
 
 ```[protection]
 user     = $user
@@ -25,5 +25,6 @@ password = $password
 ```
 
 where $user and $password are the user and password required respectively.
+Folders inside the folder inherit this protection.
 
-How DNS and similar are handled are also still subject to change.
+How DNS and similar are handled is still a subject of discussion.
