@@ -42,7 +42,7 @@
 # Valid configuration from main branch
 profiles.VALID_MAIN = ["main"]
 
-# Standard error with main and single branch
+# Standard error with main and one misconfigured branch
 profiles.STANDARD_ERROR_VALID_CSAF_DOCUMENT = ["main", "7.1.1_Requirement_1_Valid_CSAF_Document"]
 profiles.STANDARD_ERROR_FILENAME = ["main", "7.1.2_Requirement_2_Filename"]
 profiles.STANDARD_ERROR_TLP_WHITE = ["main", "7.1.4_Requirement_4_TLP_WHITE"]
@@ -57,7 +57,7 @@ profiles.STANDARD_ERROR_ROLIE_FEED = ["main", "7.1.15_Requirement_15_ROLIE_Feed"
 profiles.STANDARD_ERROR_ROLIE_SERVICE_DOCUMENT = ["main", "7.1.16_Requirement_16_ROLIE_service_document"]
 profiles.STANDARD_ERROR_ROLIE_CATEGORIE_DOCUMENT = ["main", "7.1.17_Requirement_17_ROLIE_category_document"]
 
-# Standard error with main and two branches
+# Standard error with main and two misconfigured branches
 profiles.STANDARD_ERROR_VALID_CSAF_DOCUMENT_AND_FILENAME = ["main", "7.1.1_Requirement_1_Valid_CSAF_Document", "7.1.2_Requirement_2_Filename"]
 profiles.STANDARD_ERROR_VALID_CSAF_DOCUMENT_AND_TLP_WHITE = ["main", "7.1.1_Requirement_1_Valid_CSAF_Document", "7.1.4_Requirement_4_TLP_WHITE"]
 profiles.STANDARD_ERROR_VALID_CSAF_DOCUMENT_AND_TLP_AMBER_AND_TLP_WHITE = ["main", "7.1.1_Requirement_1_Valid_CSAF_Document", "7.1.5_Requirement_5_TLP_AMBER_and_TLP_RED"]
@@ -66,3 +66,4 @@ profiles.STANDARD_ERROR_VALID_CSAF_DOCUMENT_AND_ONE_FOLDER_PER_YEAR = ["main", "
 profiles.STANDARD_ERROR_VALID_CSAF_DOCUMENT_AND_INDEX_TXT = ["main", "7.1.1_Requirement_1_Valid_CSAF_Document", "7.1.12_Requirement_12_index.txt"]
 profiles.STANDARD_ERROR_VALID_CSAF_DOCUMENT_AND_CHANGES_CSV = ["main", "7.1.1_Requirement_1_Valid_CSAF_Document", "7.1.13_Requirement_13_changes.csv"]
 profiles.STANDARD_ERROR_VALID_CSAF_DOCUMENT_AND_ROLIE_FEED = ["main", "7.1.1_Requirement_1_Valid_CSAF_Document", "7.1.15_Requirement_15_ROLIE_Feed"]
+profiles.STANDARD_ERROR_VALID_CSAF_DOCUMENT_AND_ROLIE_SERVICE_DOCUMENT = ["main", "7.1.1_Requirement_1_Valid_CSAF_Document", "7.1.16_Requirement_16_ROLIE_service_document"]
