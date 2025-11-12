@@ -49,7 +49,7 @@ const (
 
 const (
 	defaultSigningKey      = "privatekey.asc"
-	defaultPassphrase      = ""
+	defaultPassphrase      = "Passphrase"
 	defaultProvidersResult = "."
 )
 
