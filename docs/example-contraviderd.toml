@@ -78,6 +78,7 @@ profiles.STANDARD_ERROR_REQ_1_2_4_5 = ["main", "7.1.1_Requirement_1_Valid_CSAF_D
 # Standard error with main and five misconfigured branches
 
 # Standard error with main and six misconfigured branches
+profiles.STANDARD_ERROR_REQ_1_2_4_5 = ["main", "7.1.4_Requirement_4_TLP_WHITE", "7.1.5_Requirement_5_TLP_AMBER_and_TLP_RED", "7.1.15_Requirement_15_ROLIE_Feed", "7.1.16_Requirement_16_ROLIE_service_document", "7.1.17_Requirement_17_ROLIE_category_document"]
 
 # Standard error with main and seven misconfigured branches
 
