@@ -71,22 +71,13 @@ profiles.STANDARD_ERROR_VALID_CSAF_DOCUMENT_AND_ROLIE_CATEGORIE_DOCUMENT = ["mai
 
 # Standard error with main and three misconfigured branches
 profiles.STANDARD_ERROR_REQ_1_2_4 = ["main", "7.1.1_Requirement_1_Valid_CSAF_Document", "7.1.2_Requirement_2_Filename", "7.1.4_Requirement_4_TLP_WHITE"]
+profiles.STANDARD_ERROR_REQ_1_2_4 = ["main", "7.1.1_Requirement_1_Valid_CSAF_Document", "7.1.2_Requirement_2_Filename", "7.1.4_Requirement_4_TLP_WHITE"]
 
 # Standard error with main and four misconfigured branches
 profiles.STANDARD_ERROR_REQ_1_2_4_5 = ["main", "7.1.1_Requirement_1_Valid_CSAF_Document", "7.1.2_Requirement_2_Filename", "7.1.4_Requirement_4_TLP_WHITE", "7.1.5_Requirement_5_TLP_AMBER_and_TLP_RED"]
 
-# Standard error with main and five misconfigured branches
-
-# Standard error with main and six misconfigured branches
-profiles.STANDARD_ERROR_REQ_1_2_4_5 = ["main", "7.1.4_Requirement_4_TLP_WHITE", "7.1.5_Requirement_5_TLP_AMBER_and_TLP_RED", "7.1.15_Requirement_15_ROLIE_Feed", "7.1.16_Requirement_16_ROLIE_service_document", "7.1.17_Requirement_17_ROLIE_category_document"]
-
-# Standard error with main and seven misconfigured branches
-
-# Standard error with main and eight misconfigured branches
-
-# Standard error with main and nine misconfigured branches
-
-# Standard error with main and ten misconfigured branches
+# Standard error with main and nine misconfigured branches (changes on "white"-specific files)
+profiles.STANDARD_ERROR_REQ_1_2_4_5_11_12_13_15_17 = ["main", "7.1.1_Requirement_1_Valid_CSAF_Document", "7.1.2_Requirement_2_Filename", "7.1.4_Requirement_4_TLP_WHITE", "7.1.5_Requirement_5_TLP_AMBER_and_TLP_RED", "7.1.11_Requirement_11_One_folder_per_year", "7.1.12_Requirement_12_index.txt", "7.1.13_Requirement_13_changes.csv", "7.1.15_Requirement_15_ROLIE_Feed", "7.1.17_Requirement_17_ROLIE_category_document"]
 
 # Standard error with main and all misconfigured branches
 profiles.STANDARD_ERROR_REQ_all = ["main", "7.1.1_Requirement_1_Valid_CSAF_Document", "7.1.2_Requirement_2_Filename", "7.1.4_Requirement_4_TLP_WHITE", "7.1.4_Requirement_4_TLP_WHITE", "7.1.5_Requirement_5_TLP_AMBER_and_TLP_RED", "7.1.8_Requirement_8_security.txt", "7.1.9_Requirement_9_Well-known_URL_for_provider-metadata.json", "7.1.11_Requirement_11_One_folder_per_year", "7.1.12_Requirement_12_index.txt", "7.1.13_Requirement_13_changes.csv", "7.1.15_Requirement_15_ROLIE_Feed", "7.1.16_Requirement_16_ROLIE_service_document", "7.1.17_Requirement_17_ROLIE_category_document"] #TODO: To be added when working: "7.1.7_Requirement_7_provider-metadata.json", "7.1.9_Requirement_9_Well-known_URL_for_provider-metadata.json"
