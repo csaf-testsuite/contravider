@@ -168,7 +168,8 @@ func (s *System) Serve(profile string) error {
 			}
 		}
 
-		// If we have directives store them in the root folder of the export.
+		// Merge all found .directives.toml files (from any subdirectory) into one
+		// .directories.json at the export root.
 		if directories := directivesBuilder.Directories(); directories != nil {
 			directoriesFile := path.Join(targetDir, ".directories.json")
 			slog.Debug("writing directories file", "file", directoriesFile)
