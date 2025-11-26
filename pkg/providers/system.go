@@ -154,10 +154,18 @@ func (s *System) Serve(profile string) error {
 			return
 		}
 
-		// Apply JSON mutations based on .well-known/csaf/.directives.toml before signing/hashing.
-		if err := applyProviderMetadataOverrides(targetDir); err != nil {
-			errExit(fmt.Errorf("applying export patches for %q failed: %w", profile, err))
-			return
+		// Apply extensible export modifiers before signing/hashing.
+		// Add new modifiers to this slice to extend functionality.
+		modifiers := []func(string) error{
+			applyProviderMetadataOverrides,
+			// add more modifications here
+		}
+
+		for _, m := range modifiers {
+			if err := m(targetDir); err != nil {
+				errExit(fmt.Errorf("export modifier failed for %q: %w", profile, err))
+				return
+			}
 		}
 
 		// If we have directives store them in the root folder of the export.
