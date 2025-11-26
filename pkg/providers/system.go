@@ -154,6 +154,12 @@ func (s *System) Serve(profile string) error {
 			return
 		}
 
+		// Apply JSON mutations based on .well-known/csaf/.directives.toml before signing/hashing.
+		if err := applyProviderMetadataOverrides(targetDir); err != nil {
+			errExit(fmt.Errorf("applying export patches for %q failed: %w", profile, err))
+			return
+		}
+
 		// If we have directives store them in the root folder of the export.
 		if directories := directivesBuilder.Directories(); directories != nil {
 			directoriesFile := path.Join(targetDir, ".directories.json")

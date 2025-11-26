@@ -13,7 +13,6 @@ package web
 
 import (
 	"errors"
-	"html/template"
 	"log/slog"
 	"maps"
 	"net/http"
@@ -43,51 +42,19 @@ func NewController(
 	}, nil
 }
 
-// indexTmplText is a HTML template listing the available profiles.
-const indexTmplText = `<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <title>Contravider</title>
-  </head>
-  <body>
-    <h1>Contravider v{{ .Version }}</h1>
-    <p>
-      <h2>Available profiles:</h2>
-      <ul>
-      {{ range .Profiles }}
-      <li><a href="{{ . }}">{{ . }}</a></li>
-      {{ end }}
-      </ul>
-    </p>
-  </body>
-</html>
-`
-
-var indexTmpl = template.Must(template.New("index").Parse(indexTmplText))
-
-// renderProfilesList renders an overview over the profiles available
-// on this server.
-func (c *Controller) renderProfilesList(rw http.ResponseWriter) {
-	profiles := slices.Collect(maps.Keys(c.cfg.Providers.Profiles))
-	slices.Sort(profiles)
-	if err := indexTmpl.Execute(rw, struct {
-		Version  string
-		Profiles []string
-	}{
-		Version:  version.SemVersion,
-		Profiles: profiles,
-	}); err != nil {
-		slog.Error("cannot write index template", "error", err)
-	}
-}
-
 // profiles serves profiles.
 func (c *Controller) profiles(rw http.ResponseWriter, req *http.Request) {
 	path := strings.TrimLeft(req.URL.Path, "/")
 	parts := strings.Split(path, "/")
 	if len(parts) == 0 || parts[0] == "" {
 		// List available profiles.
-		c.renderProfilesList(rw)
+		// collect and sort profiles, pass to renderer in views.go
+		profiles := slices.Collect(maps.Keys(c.cfg.Providers.Profiles))
+		slices.Sort(profiles)
+		if err := renderProfilesList(rw, version.SemVersion, profiles); err != nil {
+			slog.Error("cannot write index template", "error", err)
+			http.Error(rw, "internal server error: "+err.Error(), http.StatusInternalServerError)
+		}
 		return
 	}
 	// Don't leak the directories file.
@@ -102,9 +69,7 @@ func (c *Controller) profiles(rw http.ResponseWriter, req *http.Request) {
 		http.NotFound(rw, req)
 		return
 	case err != nil:
-		http.Error(rw,
-			"internal server error: "+err.Error(),
-			http.StatusInternalServerError)
+		http.Error(rw, "internal server error: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 	// Check for directories.
@@ -112,9 +77,7 @@ func (c *Controller) profiles(rw http.ResponseWriter, req *http.Request) {
 	dir, err := providers.LoadDirectory(dirFile)
 	if err != nil {
 		slog.Error("cannot load directory", "profile", profile, "error", err)
-		http.Error(rw,
-			"internal server error: "+err.Error(),
-			http.StatusInternalServerError)
+		http.Error(rw, "internal server error: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 	// Check if an authentication is needed.
