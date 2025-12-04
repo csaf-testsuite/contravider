@@ -79,12 +79,13 @@ type Signing struct {
 
 // Providers are the config options for the served provider profiles.
 type Providers struct {
-	GitURL   string        `toml:"git_url"`
-	BaseURL  string        `toml:"base_url"`
-	Profiles Profiles      `toml:"profiles"`
-	WorkDir  string        `toml:"workdir"`
-	Update   time.Duration `toml:"update"`
-	Result   string        `toml:"result"`
+	GitURL       string        `toml:"git_url"`
+	BaseURL      string        `toml:"base_url"`
+	ProfilesFile string        `toml:"profiles_file"`
+	Profiles     Profiles      `toml:"profiles"`
+	WorkDir      string        `toml:"workdir"`
+	Update       time.Duration `toml:"update"`
+	Result       string        `toml:"result"`
 }
 
 // Config are all the configuration options.
@@ -142,6 +143,13 @@ func Load(file string) (*Config, error) {
 	}
 	if err := cfg.fillFromEnv(); err != nil {
 		return nil, err
+	}
+	if cfg.Providers.ProfilesFile != "" {
+		var profiles Profiles
+		if _, err := toml.DecodeFile(cfg.Providers.ProfilesFile, &profiles); err != nil {
+			return nil, fmt.Errorf("failed to load profiles from %s: %w", cfg.Providers.ProfilesFile, err)
+		}
+		cfg.Providers.Profiles = profiles
 	}
 	return cfg, nil
 }
