@@ -12,6 +12,7 @@ package config
 
 import (
 	"fmt"
+	"maps"
 	"slices"
 	"strings"
 )
@@ -46,6 +47,12 @@ func (p *Profiles) UnmarshalTOML(data any) error {
 	}
 	*p = pr
 	return nil
+}
+
+// Merge merges the given profiles into these.
+func (p Profiles) Merge(o Profiles) error {
+	maps.Copy(p, o)
+	return p.check()
 }
 
 // check checks for cyclic and undefined definitions.
