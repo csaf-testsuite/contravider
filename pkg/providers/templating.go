@@ -11,29 +11,20 @@
 package providers
 
 import (
-	"errors"
 	"fmt"
 	"html/template"
 	"os"
 	"path/filepath"
 )
 
-func renderTemplates(inputDir, outputDir string, data *templateData) error {
-	// Ensure target exists.
-	if err := os.MkdirAll(outputDir, 0777); err != nil {
-		return fmt.Errorf("create outputDir failed: %w", err)
-	}
+func renderTemplates(inputDir string, data *templateData) error {
 	return filepath.Walk(inputDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		rel, _ := filepath.Rel(inputDir, path)
-		dest := filepath.Join(outputDir, rel)
-
 		if info.IsDir() {
-			return os.MkdirAll(dest, info.Mode())
+			return nil
 		}
-		// Regular file: render with template delimiters.
 		content, readErr := os.ReadFile(path)
 		if readErr != nil {
 			return fmt.Errorf("read %q failed: %w", path, readErr)
@@ -44,12 +35,26 @@ func renderTemplates(inputDir, outputDir string, data *templateData) error {
 		if parseErr != nil {
 			return fmt.Errorf("parse %q as template failed: %w", path, parseErr)
 		}
-		out, createErr := os.OpenFile(dest, os.O_RDWR|os.O_CREATE|os.O_TRUNC, info.Mode())
+		dir := filepath.Dir(path)
+		tmp, createErr := os.CreateTemp(dir, "."+info.Name()+".*.tmp")
 		if createErr != nil {
-			return fmt.Errorf("create %q failed: %w", dest, createErr)
+			return fmt.Errorf("create temp for %q failed: %w", path, createErr)
 		}
-		if execErr := errors.Join(tmpl.Execute(out, data), out.Close()); execErr != nil {
-			return fmt.Errorf("write rendered %q failed: %w", dest, execErr)
+		// Ensure cleanup on error.
+		defer os.Remove(tmp.Name())
+		if chmodErr := os.Chmod(tmp.Name(), info.Mode()); chmodErr != nil {
+			_ = tmp.Close()
+			return fmt.Errorf("chmod temp %q failed: %w", tmp.Name(), chmodErr)
+		}
+		if execErr := tmpl.Execute(tmp, data); execErr != nil {
+			_ = tmp.Close()
+			return fmt.Errorf("render %q failed: %w", path, execErr)
+		}
+		if closeErr := tmp.Close(); closeErr != nil {
+			return fmt.Errorf("close temp for %q failed: %w", path, closeErr)
+		}
+		if renameErr := os.Rename(tmp.Name(), path); renameErr != nil {
+			return fmt.Errorf("replace %q failed: %w", path, renameErr)
 		}
 		return nil
 	})

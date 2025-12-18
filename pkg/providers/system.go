@@ -142,13 +142,6 @@ func (s *System) Serve(profile string) error {
 			result <- err
 		}
 
-		directivesBuilder := &DirectoryBuilder{}
-
-		// TODO(anatheka):
-		// 1st part): git stuff, merging
-		// 2nd part): templating stuff; using a separate temp folder (to be removed when finished). The temp folder is used for intermediate steps. Example: generate 10k files directly in the target folder and perform hashing/signing there as well. However, we may need to perform additional directives in the target folder if we want to make changes after hashing/signing.
-		// 3rd part): signing/hashing stuff
-
 		// Use a separate temp folder for intermediate templating.
 		tempDir := targetDir + ".tmp"
 		if err := os.MkdirAll(tempDir, 0777); err != nil {
@@ -157,6 +150,12 @@ func (s *System) Serve(profile string) error {
 		}
 		// Ensure cleanup of tempDir in any case.
 		defer os.RemoveAll(tempDir)
+		directivesBuilder := &DirectoryBuilder{}
+
+		// TODO(anatheka):
+		// 1st part): git stuff, merging
+		// 2nd part): templating stuff; using a separate temp folder (to be removed when finished). The temp folder is used for intermediate steps. Example: generate 10k files directly in the target folder and perform hashing/signing there as well. However, we may need to perform additional directives in the target folder if we want to make changes after hashing/signing.
+		// 3rd part): signing/hashing stuff
 
 		// Rebind untar to write into tempDir (raw files, no templating).
 		untar := templateFromTar(
@@ -171,8 +170,8 @@ func (s *System) Serve(profile string) error {
 		}
 
 		// renderTemplates walks over all files in inputDir, renders them as templates with data.
-		if err := renderTemplates(tempDir, targetDir, s.fillTemplateData(profile)); err != nil {
-			errExit(fmt.Errorf("materializing templates failed: %w", err))
+		if err := renderTemplates(tempDir, s.fillTemplateData(profile)); err != nil {
+			errExit(fmt.Errorf("rendering templates failed: %w", err))
 			return
 		}
 
@@ -201,7 +200,7 @@ func (s *System) Serve(profile string) error {
 		// Merge all found .directives.toml files (from any subdirectory) into one
 		// .directories.json at the export root.
 		if directories := directivesBuilder.Directories(); directories != nil {
-			directoriesFile := path.Join(targetDir, ".directories.json")
+			directoriesFile := path.Join(tempDir, ".directories.json")
 			slog.Debug("writing directories file", "file", directoriesFile)
 			if err := directories.WriteToFile(directoriesFile); err != nil {
 				errExit(fmt.Errorf(
@@ -212,7 +211,7 @@ func (s *System) Serve(profile string) error {
 		}
 
 		// Store the public key in the exported directory.
-		if err := writePublicKey(s.key, targetDir); err != nil {
+		if err := writePublicKey(s.key, tempDir); err != nil {
 			errExit(fmt.Errorf("signing failed: %w", err))
 			return
 		}
@@ -223,14 +222,22 @@ func (s *System) Serve(profile string) error {
 			errExit(fmt.Errorf("building patterns failed: %w", err))
 			return
 		}
-		if err := patterns.Apply(targetDir); err != nil {
+		if err := patterns.Apply(tempDir); err != nil {
 			errExit(fmt.Errorf("applying actions failed: %w", err))
 			return
 		}
 
+		// TODO(all): Maybe add further changes here before copying to targetDir.
+
 		// Create a symlink for the profile.
-		if err := os.Symlink(targetDir, profileDir); err != nil {
+		if err := os.Symlink(tempDir, profileDir); err != nil {
 			errExit(fmt.Errorf("symlinking profile %q failed: %w", profile, err))
+			return
+		}
+
+		// Copy tmpDir to targetDir.
+		if err := os.CopyFS(targetDir, os.DirFS(tempDir)); err != nil {
+			errExit(fmt.Errorf("copy temp directory to target directory failed: %w", err))
 			return
 		}
 
