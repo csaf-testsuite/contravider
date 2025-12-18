@@ -50,17 +50,20 @@ In this case all appearance of `{port}` in ths `host` string are replaced by the
 - `update`: How often to check for new commits within the git repository. Defaults to `"5m"` (5 minutes).
 - `base_url`: The base url serving the .well-known directory according to the advisories. Defaults to `"{protocol}://{host}:{port}/{profile}"`.
 - `workdir`: The checkout directory of the git repository. Defaults to `"checkout"`.
-- `profiles`: Building profiles to be served by the contravider. Each profile is either a branch of the git repository or a merge of other profiles
+- `profile_file`: Location of the toml-file containing profiles to be served by the contravider. Each profile is either a branch of the git repository or a merge of other profiles
+
+
+### <a name="section_profiles"></a> Section `[profiles]` Profiles
 profiles: The following three types of identifiers are available for the classification of the profiles
 - VALID_: This prefix indicates configurations that are set up correctly and comply with established requirements.
 - STANDARD_ERROR_: This prefix is used for misconfigurations that do not meet the requirements of the CSAF standard.
 - KNOWN_ISSUE_: This prefix designates misconfigurations that have already been identified in existing systems.
 
 The structure is as follows:
-`profiles.Identifier = [profile1, profile2, ...]`
+`Identifier = [profile1, profile2, ...]`
 
 Some default examples:
-- `profiles.STANDARD_ERROR_VALID_CSAF_DOCUMENT = ["main", "7.1.1_Requirement_1_Valid_CSAF_Document"]`
-- `profiles.STANDARD_ERROR_FILENAME = ["main", "7.1.2_Requirement_2_Filename"]`
-- `profiles.STANDARD_ERROR_TLP_WHITE = ["main", "7.1.4_Requirement_4_TLP_WHITE"]`
+- `STANDARD_ERROR_VALID_CSAF_DOCUMENT = ["main", "7.1.1_Requirement_1_Valid_CSAF_Document"]`
+- `STANDARD_ERROR_FILENAME = ["main", "7.1.2_Requirement_2_Filename"]`
+- `STANDARD_ERROR_TLP_WHITE = ["main", "7.1.4_Requirement_4_TLP_WHITE"]`
 

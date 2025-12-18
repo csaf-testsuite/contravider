@@ -79,12 +79,13 @@ type Signing struct {
 
 // Providers are the config options for the served provider profiles.
 type Providers struct {
-	GitURL   string        `toml:"git_url"`
-	BaseURL  string        `toml:"base_url"`
-	Profiles Profiles      `toml:"profiles"`
-	WorkDir  string        `toml:"workdir"`
-	Update   time.Duration `toml:"update"`
-	Result   string        `toml:"result"`
+	GitURL       string        `toml:"git_url"`
+	BaseURL      string        `toml:"base_url"`
+	ProfilesFile string        `toml:"profiles_file"`
+	Profiles     Profiles      `toml:"profiles"`
+	WorkDir      string        `toml:"workdir"`
+	Update       time.Duration `toml:"update"`
+	Result       string        `toml:"result"`
 }
 
 // Config are all the configuration options.
@@ -143,6 +144,19 @@ func Load(file string) (*Config, error) {
 	if err := cfg.fillFromEnv(); err != nil {
 		return nil, err
 	}
+	if cfg.Providers.ProfilesFile != "" {
+		var profiles Profiles
+		if _, err := toml.DecodeFile(cfg.Providers.ProfilesFile, &profiles); err != nil {
+			return nil, fmt.Errorf("failed to load profiles from %q: %w", cfg.Providers.ProfilesFile, err)
+		}
+		if len(cfg.Providers.Profiles) != 0 {
+			if err := cfg.Providers.Profiles.Merge(profiles); err != nil {
+				return nil, fmt.Errorf("merging profiles failed: %w", err)
+			}
+		} else {
+			cfg.Providers.Profiles = profiles
+		}
+	}
 	return cfg, nil
 }
 
@@ -169,5 +183,6 @@ func (cfg *Config) fillFromEnv() error {
 		envStore{"CONTRAVIDER_PROVIDERS_GIT_URL", storeString(&cfg.Providers.GitURL)},
 		envStore{"CONTRAVIDER_PROVIDERS_BASE_URL", storeString(&cfg.Providers.BaseURL)},
 		envStore{"CONTRAVIDER_PROVIDERS_UPDATE", storeDuration(&cfg.Providers.Update)},
+		envStore{"CONTRAVIDER_PROVIDERS_FILE", storeString(&cfg.Providers.ProfilesFile)},
 	)
 }
