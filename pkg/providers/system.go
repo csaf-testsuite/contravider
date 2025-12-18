@@ -144,25 +144,55 @@ func (s *System) Serve(profile string) error {
 
 		directivesBuilder := &DirectoryBuilder{}
 
+		// TODO(anatheka):
+		// 1st part): git stuff, merging
+		// 2nd part): templating stuff; using a separate temp folder (to be removed when finished). The temp folder is used for intermediate steps. Example: generate 10k files directly in the target folder and perform hashing/signing there as well. However, we may need to perform additional directives in the target folder if we want to make changes after hashing/signing.
+		// 3rd part): signing/hashing stuff
+
+		// Use a separate temp folder for intermediate templating.
+		tempDir := targetDir + ".tmp"
+		if err := os.MkdirAll(tempDir, 0777); err != nil {
+			errExit(fmt.Errorf("creating temp dir failed: %w", err))
+			return
+		}
+		// Ensure cleanup of tempDir in any case.
+		defer os.RemoveAll(tempDir)
+
+		// Rebind untar to write into tempDir (raw files, no templating).
 		untar := templateFromTar(
-			targetDir,
-			s.fillTemplateData(profile),
+			tempDir,
+			nil, // templating moved out
 			directivesBuilder.addDirectives)
 
+		// Merge all branches into workDir.
 		if err := mergeBranches(s.cfg.Providers.WorkDir, branches, untar); err != nil {
 			errExit(fmt.Errorf("merging profile %q failed: %w", profile, err))
 			return
 		}
 
+		// renderTemplates walks over all files in inputDir, renders them as templates with data.
+		if err := renderTemplates(tempDir, targetDir, s.fillTemplateData(profile)); err != nil {
+			errExit(fmt.Errorf("materializing templates failed: %w", err))
+			return
+		}
+
 		// Apply extensible export modifiers before signing/hashing.
 		// Add new modifiers to this slice to extend functionality.
-		modifiers := []func(string) error{
+		// Get the profile directory inside the checkout.
+		profileDirCheckout := path.Join(s.cfg.Providers.WorkDir, profile)
+		profileDirCheckout, err = filepath.Abs(profileDirCheckout)
+		if err != nil {
+			result <- fmt.Errorf("unable to get abs path for %q: %w", profile, err)
+			return
+		}
+
+		// TODO(anatheka): Delete this, we want to have it another way.
+		modifiers := []func(string, string) error{
 			applyProviderMetadataOverrides,
 			// add more modifications here
 		}
-
 		for _, m := range modifiers {
-			if err := m(targetDir); err != nil {
+			if err := m(targetDir, profileDirCheckout); err != nil {
 				errExit(fmt.Errorf("export modifier failed for %q: %w", profile, err))
 				return
 			}

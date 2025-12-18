@@ -14,7 +14,6 @@ import (
 	"archive/tar"
 	"errors"
 	"fmt"
-	"html/template"
 	"io"
 	"log/slog"
 	"os"
@@ -48,7 +47,7 @@ type (
 // and instantiate them with the given template data.
 func templateFromTar(
 	targetDir string,
-	data *templateData,
+	_ *templateData, // no templating here anymore
 	directives func([]string, io.Reader) error,
 ) func(io.Reader) error {
 	return func(r io.Reader) error {
@@ -82,19 +81,16 @@ func templateFromTar(
 				if err != nil {
 					return fmt.Errorf("cannot read data of %q: %w", hdr.Name, err)
 				}
-				// Parse the template data.
-				tmpl, err := template.New(parts[len(parts)-1]).
-					Delims("$((", "))$").
-					Parse(string(content))
-				if err != nil {
-					return fmt.Errorf("parsing %q as template failed: %w", hdr.Name, err)
-				}
+				// Write content unchanged (no templating here).
 				f, err := os.OpenFile(name, os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.FileMode(hdr.Mode))
 				if err != nil {
 					return fmt.Errorf("cannot create file %q: %w", name, err)
 				}
-				if err := errors.Join(tmpl.Execute(f, data), f.Close()); err != nil {
-					return fmt.Errorf("writing templated data to %q failed: %w", name, err)
+				if err := errors.Join(func() error {
+					_, werr := f.Write(content)
+					return werr
+				}(), f.Close()); err != nil {
+					return fmt.Errorf("writing data to %q failed: %w", name, err)
 				}
 
 			case tar.TypeDir:
@@ -118,7 +114,7 @@ func (pa PatternActions) Apply(inputDir string) error {
 			if err != nil {
 				return err
 			}
-			// Ignore none regular files.
+			// Ignore non-regular files.
 			if !info.Mode().IsRegular() {
 				return nil
 			}

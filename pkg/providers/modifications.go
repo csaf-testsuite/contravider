@@ -18,8 +18,8 @@ type directiveFile struct {
 
 // applyProviderMetadataOverrides reads .well-known/csaf/.directives.toml (if present)
 // and overrides fields (currently canonical_url) in provider-metadata.json.
-func applyProviderMetadataOverrides(root string) error {
-	dirToml := filepath.Join(root, ".well-known", "csaf", ".directives.toml")
+func applyProviderMetadataOverrides(root, profileDir string) error {
+	dirToml := filepath.Join(profileDir, "data", ".well-known", "csaf", ".directives.toml")
 	info, err := os.Stat(dirToml)
 	switch {
 	case errors.Is(err, os.ErrNotExist):
