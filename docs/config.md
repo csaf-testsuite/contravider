@@ -39,7 +39,7 @@ The configuration consists of the following sections:
 - `host`: Interface the web server listens on. Defaults to `"localhost"`.
 If the value starts with a slash (`/`) it is assumed to serve on an unix domain socket.
 In this case all appearance of `{port}` in ths `host` string are replaced by the `port` number.
-- `port`: Port the web server listens on. Defaults to `8081`.
+- `port`: Port the web server listens on. Defaults to `8083`.
 - `protocol`: The assumed protocol the web server is using. Currently only affects the URLs within the documents. Defaults to `"https"`.
 - `root`: The location for the provider to be served. Defaults to `"web"`.
 - `cert_file`: Public key of the server. Defaults to `""` (not set. Set if you want to run a HTTPS server).
