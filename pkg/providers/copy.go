@@ -12,6 +12,7 @@ package providers
 
 import (
 	"archive/tar"
+	"bytes"
 	"errors"
 	"fmt"
 	"html/template"
@@ -43,9 +44,11 @@ type (
 	PatternActions []PatternAction
 )
 
-// applyTemplateFromTar deserializes files from a tar stream as templates
-// and instantiate them with the given template data. (copied from old templateFromTar).
-func applyTemplateFromTar(targetDir string, data *templateData, r io.Reader) error {
+// storeCheckoutFromTar deserializes files from a tar stream as templates
+func storeCheckoutFromTar(targetDir string,
+	data *templateData,
+	r io.Reader,
+	directives func([]string, io.Reader) error) error {
 	tr := tar.NewReader(r)
 	for {
 		hdr, err := tr.Next()
@@ -68,28 +71,25 @@ func applyTemplateFromTar(targetDir string, data *templateData, r io.Reader) err
 			// Handle directives files
 			if parts[len(parts)-1] == ".directives.toml" {
 				slog.Debug("directives found", "path", hdr.Name)
-				// Do nothing here, walk and apply directives later
-				// continue
-			}
 
-			content, err := io.ReadAll(tr)
-			if err != nil {
-				return fmt.Errorf("cannot read data of %q: %w", hdr.Name, err)
-			}
-			// Parse the template data.
-			tmpl, err := template.New(parts[len(parts)-1]).
-				Delims("$((", "))$").
-				Parse(string(content))
-			if err != nil {
-				return fmt.Errorf("parsing %q as template failed: %w", hdr.Name, err)
-			}
+				// Read the directives file
+				var buf bytes.Buffer
+				if _, err := io.Copy(&buf, tr); err != nil {
+					return fmt.Errorf("reading directives file %q failed: %w", hdr.Name, err)
+				}
 
+				if err := directives(parts[1:], bytes.NewReader(buf.Bytes())); err != nil {
+					return fmt.Errorf("parsing directives file failed: %w", err)
+				}
+				continue
+			}
 			f, err := os.OpenFile(name, os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.FileMode(hdr.Mode))
 			if err != nil {
 				return fmt.Errorf("cannot create file %q: %w", name, err)
 			}
-			if err := errors.Join(tmpl.Execute(f, data), f.Close()); err != nil {
-				return fmt.Errorf("writing templated data to %q failed: %w", name, err)
+			_, cpErr := io.Copy(f, tr)
+			if err := errors.Join(cpErr, f.Close()); err != nil {
+				return fmt.Errorf("copying from tar failed: %w", err)
 			}
 
 		case tar.TypeDir:
@@ -108,7 +108,7 @@ func applyTemplateFromTar(targetDir string, data *templateData, r io.Reader) err
 func templateFromTar(
 	targetDir string,
 	data *templateData,
-	directives func([]string, io.Reader) error,
+	builder *DirectoryBuilder,
 ) func(io.Reader) error {
 	return func(r io.Reader) error {
 
@@ -121,17 +121,16 @@ func templateFromTar(
 				slog.Error("failed to remove temp dir", "dir", tmpDir, "error", removeErr)
 			}
 		}()
-		if err := applyTemplateFromTar(tmpDir, data, r); err != nil {
+		if err := storeCheckoutFromTar(tmpDir, data, r, builder.addDirectives); err != nil {
 			return fmt.Errorf("extracting to temp failed: %w", err)
 
 		}
-		// New Directives function, TODO
-		if err := applyDirectives(tmpDir, directives); err != nil {
-			return fmt.Errorf("processing directives in temp dir failed: %w", err)
-		}
-
+		applyDirectives(tmpDir, builder.Directories())
 		// Copy into final destination
-		if err := copyDirectoryExcludingDirectives(tmpDir, targetDir); err != nil {
+		if err := copyDirectoryExcludingDirectives(tmpDir, targetDir, data); err != nil {
+			if err := os.RemoveAll(targetDir); err != nil {
+				slog.Error("deleting target directory failed", "error", err)
+			}
 			return fmt.Errorf("copying from temp to target failed: %w", err)
 		}
 		return nil
@@ -139,18 +138,15 @@ func templateFromTar(
 }
 
 // applyDirectives walks the temp dir and applies all found directives
-func applyDirectives(tmpDir string, directives func([]string, io.Reader) error) error {
-	return filepath.Walk(tmpDir, func(p string, info os.FileInfo, err error) error {
-		// TODO
-		return nil
-	})
+func applyDirectives(inputDir string, root *Directory) error {
+	return nil
 }
 
 // copyDirectoryExcludingDirectives copies all files from the input directory inputDir and all files in all subfolders
 // into the output directory outputDir using the Walk function.
-func copyDirectoryExcludingDirectives(inputDir string, outputDir string) error {
+func copyDirectoryExcludingDirectives(inputDir string, outputDir string, data *templateData) error {
 
-	err := filepath.Walk(inputDir, func(path string, info os.FileInfo, err error) error {
+	return filepath.Walk(inputDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -159,11 +155,7 @@ func copyDirectoryExcludingDirectives(inputDir string, outputDir string) error {
 		if info.IsDir() {
 			return nil
 		}
-		// Don't copy .directives.toml files into the final destination
-		if info.Name() == ".directives.toml" {
-			slog.Debug("not copying directives.toml file", "path", path)
-			return nil
-		}
+
 		// save relative path in the structure
 		relPath, err := filepath.Rel(inputDir, path)
 		if err != nil {
@@ -183,34 +175,30 @@ func copyDirectoryExcludingDirectives(inputDir string, outputDir string) error {
 		if err != nil {
 			return err
 		}
-		copyErr := copyFile(inputFile, outPath, info)
-		return copyErr
+		copyErr := copyFile(inputFile, outPath, info, data)
+		return errors.Join(copyErr, inputFile.Close())
 	})
-	// for error handling
-	return err
 }
 
 // copyFile copies a singular file onto a given path
-func copyFile(inputFile *os.File, outPath string, info os.FileInfo) error {
-	// Read input file
-
-	// Close it again
-	defer inputFile.Close()
+func copyFile(inputFile *os.File, outPath string, info os.FileInfo, data *templateData) error {
+	content, err := io.ReadAll(inputFile)
+	if err != nil {
+		return fmt.Errorf("cannot read data of %q: %w", inputFile.Name(), err)
+	}
+	tmpl, err := template.New(filepath.Base(outPath)).
+		Delims("$((", "))$").
+		Parse(string(content))
+	if err != nil {
+		return fmt.Errorf("parsing %q as template failed: %w", inputFile.Name(), err)
+	}
 	// Create output file
 	outputFile, err := os.OpenFile(outPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, info.Mode())
 	if err != nil {
 		return err
 	}
-
 	// copy the data bytes from source to destination
-	_, err = io.Copy(outputFile, inputFile)
-	if err != nil {
-		return err
-	}
-	// always close file to prevent many opened files at once
-	closingError := outputFile.Close()
-	// handle error in closing file
-	return closingError
+	return errors.Join(tmpl.Execute(outputFile, data), outputFile.Close())
 }
 
 // Apply walks recursively over a given directory and

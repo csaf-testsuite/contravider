@@ -147,7 +147,7 @@ func (s *System) Serve(profile string) error {
 		untar := templateFromTar(
 			targetDir,
 			s.fillTemplateData(profile),
-			directivesBuilder.addDirectives)
+			directivesBuilder)
 
 		if err := mergeBranches(s.cfg.Providers.WorkDir, branches, untar); err != nil {
 			errExit(fmt.Errorf("merging profile %q failed: %w", profile, err))

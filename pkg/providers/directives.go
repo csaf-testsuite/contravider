@@ -39,7 +39,7 @@ type (
 	Directory struct {
 		Name       string       `json:"name"`
 		Folders    []*Directory `json:"folders,omitempty"`
-		Protection *Protection  `json:"protection,omitempty"`
+		Directives *Directives  `json:"directives,omitempty"`
 	}
 )
 
@@ -72,7 +72,7 @@ func (tb *DirectoryBuilder) addDirectives(path []string, r io.Reader) error {
 			curr = curr.Folders[idx]
 		}
 	}
-	curr.Protection = d.Protection
+	curr.Directives = &d
 	return nil
 }
 
@@ -107,6 +107,28 @@ func LoadDirectory(path string) (*Directory, error) {
 	return &dir, nil
 }
 
+// FindDirectory traverses the given path and returns the first
+// directory.
+func (d *Directory) FindDirectory(path []string) *Directives {
+	for _, part := range path {
+		if part == "" {
+			continue
+		}
+		idx := slices.IndexFunc(d.Folders, func(f *Directory) bool {
+			return f.Name == part
+		})
+		if idx == -1 {
+			return nil
+		}
+		next := d.Folders[idx]
+		if next.Directives != nil {
+			return next.Directives
+		}
+		d = next
+	}
+	return nil
+}
+
 // FindProtection traverses the given path and returns the first
 // directory with a valid protection.
 func (d *Directory) FindProtection(path []string) *Protection {
@@ -121,8 +143,8 @@ func (d *Directory) FindProtection(path []string) *Protection {
 			return nil
 		}
 		next := d.Folders[idx]
-		if next.Protection != nil {
-			return next.Protection
+		if next.Directives.Protection != nil {
+			return next.Directives.Protection
 		}
 		d = next
 	}
