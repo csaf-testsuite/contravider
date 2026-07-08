@@ -148,12 +148,10 @@ func (s *System) Serve(profile string) error {
 			targetDir,
 			s.fillTemplateData(profile),
 			directivesBuilder)
-
 		if err := mergeBranches(s.cfg.Providers.WorkDir, branches, untar); err != nil {
 			errExit(fmt.Errorf("merging profile %q failed: %w", profile, err))
 			return
 		}
-
 		// If we have directives store them in the root folder of the export.
 		if directories := directivesBuilder.Directories(); directories != nil {
 			directoriesFile := path.Join(targetDir, ".directories.json")
@@ -204,7 +202,7 @@ func (s *System) buildPatternActions() (PatternActions, error) {
 	return PatternActions{
 		{regexp.MustCompile(`csaf-feed-tlp-[^\.]*\.json$`), nil},
 		{regexp.MustCompile(`(\.directories|provider-metadata|service|category)[^\.]*\.json$`), nil},
-		{regexp.MustCompile(`\.json$`), []Action{hashFile, signing}},
+		{regexp.MustCompile(`\.json$`), []Action{signing}},
 	}, nil
 }
 

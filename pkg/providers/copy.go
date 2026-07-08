@@ -111,7 +111,6 @@ func templateFromTar(
 	builder *DirectoryBuilder,
 ) func(io.Reader) error {
 	return func(r io.Reader) error {
-
 		tmpDir, err := os.MkdirTemp("", "contravider-*")
 		if err != nil {
 			return fmt.Errorf("creating temp dir failed: %w", err)
@@ -125,7 +124,7 @@ func templateFromTar(
 			return fmt.Errorf("extracting to temp failed: %w", err)
 
 		}
-		applyDirectives(tmpDir, builder.Directories())
+		applyDirectives(builder.root, tmpDir)
 		// Copy into final destination
 		if err := copyDirectoryExcludingDirectives(tmpDir, targetDir, data); err != nil {
 			if err := os.RemoveAll(targetDir); err != nil {
@@ -138,14 +137,55 @@ func templateFromTar(
 }
 
 // applyDirectives walks the temp dir and applies all found directives
-func applyDirectives(inputDir string, root *Directory) error {
+func applyDirectives(d *Directory, path string) error {
+	if d == nil {
+		return nil
+	}
+	// Add current directory name to path
+	curPath := filepath.Join(path, d.Name)
+	// if it's nil, then there's no actions to do
+	if d.Directives != nil {
+		// Handle Setup first
+		for _, action := range d.Directives.Setup {
+			if err := runAction(action, curPath); err != nil {
+				return fmt.Errorf("setup failed at %s: %w", curPath, err)
+			}
+		}
+		// Handle Apply second
+		for _, action := range d.Directives.Apply {
+			if err := runAction(action, curPath); err != nil {
+				return fmt.Errorf("apply failed at %s: %w", curPath, err)
+			}
+		}
+	}
+	// Go through all subfolders recursively
+	for _, subDir := range d.Folders {
+		if err := applyDirectives(subDir, curPath); err != nil {
+			return err
+		}
+	}
+	if d.Directives != nil {
+		// Handle the Teardown last, after the recursive function returned
+		for _, action := range d.Directives.Teardown {
+			if err := runAction(action, curPath); err != nil {
+				return fmt.Errorf("teardown failed at %s: %w", curPath, err)
+			}
+		}
+	}
 	return nil
+}
+
+// runAction checks whether a Daction exists and executes it
+func runAction(action *Daction, currentPath string) error {
+	if DactionFunction, exists := DactionFuncs[action.Action]; exists {
+		return DactionFunction(action.Targets, currentPath)
+	}
+	return fmt.Errorf("unknown Daction type: %s", action.Action)
 }
 
 // copyDirectoryExcludingDirectives copies all files from the input directory inputDir and all files in all subfolders
 // into the output directory outputDir using the Walk function.
 func copyDirectoryExcludingDirectives(inputDir string, outputDir string, data *templateData) error {
-
 	return filepath.Walk(inputDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
