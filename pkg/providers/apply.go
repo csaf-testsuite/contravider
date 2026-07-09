@@ -62,11 +62,24 @@ func Apply(
 				if err != nil {
 					return err
 				}
+				// Apply context before custom scripts.
+				if ndata, err := applyBefore(context, data); err != nil {
+					return err
+				} else {
+					data = ndata
+				}
+				// Apply the custom scripts.
 				for _, script := range scripts {
 					ndata, err := script.Apply(context, subPath, data)
 					if err != nil {
 						return err
 					}
+					data = ndata
+				}
+				// Apply context after custom scripts.
+				if ndata, err := applyAfter(context, data); err != nil {
+					return err
+				} else {
 					data = ndata
 				}
 				dstPath := filepath.Join(dstDirPath, entry.Name())
@@ -79,4 +92,16 @@ func Apply(
 	}
 
 	return recurse(nil)
+}
+
+func applyBefore(context any, data []byte) ([]byte, error) {
+	// TODO:
+	_ = context
+	return data, nil
+}
+
+func applyAfter(context any, data []byte) ([]byte, error) {
+	// TODO:
+	_ = context
+	return data, nil
 }
