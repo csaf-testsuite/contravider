@@ -222,6 +222,17 @@ func (d *Directory) FindDirectory(path []string) *Directives {
 	return nil
 }
 
+type Script interface {
+	Enter(context any) error
+	Apply(context any, path []string, data []byte) ([]byte, error)
+	Leave(context any) error
+}
+
+func (d *Directory) FindScripts(path []string) []Script {
+
+	return nil
+}
+
 // FindProtection traverses the given path and returns the first
 // directory with a valid protection.
 func (d *Directory) FindProtection(path []string) *Protection {
