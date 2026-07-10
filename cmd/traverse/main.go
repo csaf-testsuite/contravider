@@ -1,0 +1,24 @@
+// This file is Free Software under the Apache-2.0 License
+// without warranty, see README.md and LICENSE for details.
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+// SPDX-FileCopyrightText: 2025 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
+// Software-Engineering:
+// * 2025, 2026 Intevation GmbH <https://intevation.de>
+// * 2025 Fraunhofer Institute for Applied an Integrated Security (AISEC) <https://aisec.fraunhofer.de>
+
+package main
+
+import (
+	"log"
+
+	"github.com/csaf-testsuite/contravider/pkg/providers"
+)
+
+func main() {
+
+	if err := providers.Apply("../../", "../../out", nil); err != nil {
+		log.Fatalln(err)
+	}
+}
