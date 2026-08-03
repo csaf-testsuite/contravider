@@ -56,36 +56,37 @@ func Apply(
 				if err := recurse(subPath); err != nil {
 					return err
 				}
-			} else { // File
-				filePath := filepath.Join(append([]string{src}, subPath...)...)
-				data, err := os.ReadFile(filePath)
+				continue
+			}
+			// File
+			filePath := filepath.Join(append([]string{src}, subPath...)...)
+			data, err := os.ReadFile(filePath)
+			if err != nil {
+				return err
+			}
+			// Apply context before custom scripts.
+			if ndata, err := applyBefore(context, data); err != nil {
+				return err
+			} else {
+				data = ndata
+			}
+			// Apply the custom scripts.
+			for _, script := range scripts {
+				ndata, err := script.Apply(context, subPath, data)
 				if err != nil {
 					return err
 				}
-				// Apply context before custom scripts.
-				if ndata, err := applyBefore(context, data); err != nil {
-					return err
-				} else {
-					data = ndata
-				}
-				// Apply the custom scripts.
-				for _, script := range scripts {
-					ndata, err := script.Apply(context, subPath, data)
-					if err != nil {
-						return err
-					}
-					data = ndata
-				}
-				// Apply context after custom scripts.
-				if ndata, err := applyAfter(context, data); err != nil {
-					return err
-				} else {
-					data = ndata
-				}
-				dstPath := filepath.Join(dstDirPath, entry.Name())
-				if err := os.WriteFile(dstPath, data, 0666); err != nil {
-					return err
-				}
+				data = ndata
+			}
+			// Apply context after custom scripts.
+			if ndata, err := applyAfter(context, data); err != nil {
+				return err
+			} else {
+				data = ndata
+			}
+			dstPath := filepath.Join(dstDirPath, entry.Name())
+			if err := os.WriteFile(dstPath, data, 0666); err != nil {
+				return err
 			}
 		}
 		return nil
