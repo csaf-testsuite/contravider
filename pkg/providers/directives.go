@@ -31,10 +31,9 @@ type (
 	}
 	// Directives are the directives applied to a folder.
 	Directives struct {
-		Protection *Protection `toml:"protection"`
-		Setup      []*Daction  `toml:"setup"`
-		Apply      []*Daction  `toml:"apply"`
-		Teardown   []*Daction  `toml:"teardown"`
+		Setup    []*Daction `toml:"setup"`
+		Apply    []*Daction `toml:"apply"`
+		Teardown []*Daction `toml:"teardown"`
 	}
 )
 
@@ -54,6 +53,7 @@ type (
 	Directory struct {
 		Name       string       `json:"name"`
 		Folders    []*Directory `json:"folders,omitempty"`
+		Protection *Protection  `toml:"protection"`
 		Directives *Directives  `json:"directives,omitempty"`
 	}
 )
@@ -247,8 +247,8 @@ func (d *Directory) FindProtection(path []string) *Protection {
 			return nil
 		}
 		next := d.Folders[idx]
-		if next.Directives != nil && next.Directives.Protection != nil {
-			return next.Directives.Protection
+		if next.Protection != nil {
+			return next.Protection
 		}
 		d = next
 	}
