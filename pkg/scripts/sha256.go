@@ -11,8 +11,6 @@
 package scripts
 
 import (
-	"encoding/json"
-
 	"github.com/csaf-testsuite/contravider/pkg/providers"
 )
 
@@ -22,13 +20,6 @@ type (
 )
 
 // Create implements [providers.ScriptFactory].
-func (sha256Factory) Create() (providers.Script, error) {
+func (sha256Factory) Create(providers.Directive) (providers.Script, error) {
 	return sha256Script{}, nil
-}
-
-// MarshalJSON implements [json.Marshaler].
-func (sha256Factory) MarshalJSON() ([]byte, error) {
-	return json.Marshal(map[string]string{
-		"script": "sha256",
-	})
 }

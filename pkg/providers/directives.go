@@ -16,7 +16,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"slices"
 )
 
@@ -34,12 +33,14 @@ type Daction struct {
 type DactionFunc func(targets []string, currentPath string) error
 
 type (
+	Directive map[string]any
+
 	// Directory is recursive structure to model a directory tree.
 	Directory struct {
 		Name       string       `json:"name"`
 		Folders    []*Directory `json:"folders,omitempty"`
 		Protection *Protection  `toml:"protection"`
-		Directives []Directive  `json:"directives,omitempty"`
+		Directives []Directive  `toml:"directories" json:"-"`
 	}
 	// Protection are the user credentials og a folder.
 	Protection struct {
@@ -54,14 +55,7 @@ type (
 	}
 
 	ScriptFactory interface {
-		json.Marshaler
-		//json.Unmarshaler
-		Create() (Script, error)
-	}
-
-	// Directive is factory interface helping instantiating scripts.
-	Directive struct {
-		Factory ScriptFactory
+		Create(Directive) (Script, error)
 	}
 )
 
@@ -69,6 +63,8 @@ type (
 type DirectoryBuilder struct {
 	root *Directory
 }
+
+/*
 
 // DactionFuncs are the current allowed functions in toml files. May expand arbitrarily later
 // or be replaced by more generic scripting function
@@ -147,6 +143,8 @@ var DactionFuncs = map[string]DactionFunc{
 		return nil
 	},
 }
+
+*/
 
 // addDirectives adds directives to the virtual tree.
 func (tb *DirectoryBuilder) addDirectives(path []string, r io.Reader) error {

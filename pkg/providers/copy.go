@@ -179,10 +179,13 @@ func applyDirectives(d *Directory, path string) error {
 
 // runAction checks whether a Daction exists and executes it
 func runAction(action *Daction, currentPath string) error {
-	if DactionFunction, exists := DactionFuncs[action.Action]; exists {
-		return DactionFunction(action.Targets, currentPath)
-	}
-	return fmt.Errorf("unknown Daction type: %s", action.Action)
+	/*
+		if DactionFunction, exists := DactionFuncs[action.Action]; exists {
+			return DactionFunction(action.Targets, currentPath)
+		}
+		return fmt.Errorf("unknown Daction type: %s", action.Action)
+	*/
+	return nil
 }
 
 // copyDirectoryExcludingDirectives copies all files from the input directory inputDir and all files in all subfolders
