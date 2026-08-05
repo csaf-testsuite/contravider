@@ -30,6 +30,8 @@ import (
 	"github.com/csaf-testsuite/contravider/pkg/providers"
 	"github.com/csaf-testsuite/contravider/pkg/version"
 	"github.com/csaf-testsuite/contravider/pkg/web"
+
+	_ "github.com/csaf-testsuite/contravider/pkg/scripts"
 )
 
 func check(err error) {

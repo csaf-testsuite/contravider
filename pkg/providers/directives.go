@@ -55,7 +55,7 @@ type (
 
 	ScriptFactory interface {
 		json.Marshaler
-		json.Unmarshaler
+		//json.Unmarshaler
 		Create() (Script, error)
 	}
 
