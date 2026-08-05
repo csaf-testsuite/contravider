@@ -18,24 +18,9 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
-	"strings"
-
-	"github.com/BurntSushi/toml"
 )
 
-type (
-	// Protection are the user credentials og a folder.
-	Protection struct {
-		User     string `toml:"user" json:"user"`
-		Password string `toml:"password" json:"password"`
-	}
-	// Directives are the directives applied to a folder.
-	Directives struct {
-		Setup    []*Daction `toml:"setup"`
-		Apply    []*Daction `toml:"apply"`
-		Teardown []*Daction `toml:"teardown"`
-	}
-)
+type ()
 
 // Daction are the Directives Actions
 type Daction struct {
@@ -54,7 +39,29 @@ type (
 		Name       string       `json:"name"`
 		Folders    []*Directory `json:"folders,omitempty"`
 		Protection *Protection  `toml:"protection"`
-		Directives *Directives  `json:"directives,omitempty"`
+		Directives []Directive  `json:"directives,omitempty"`
+	}
+	// Protection are the user credentials og a folder.
+	Protection struct {
+		User     string `toml:"user" json:"user"`
+		Password string `toml:"password" json:"password"`
+	}
+
+	Script interface {
+		Enter(context any) error
+		Apply(context any, path []string, data []byte) ([]byte, error)
+		Leave(context any) error
+	}
+
+	ScriptFactory interface {
+		json.Marshaler
+		json.Unmarshaler
+		Create() (Script, error)
+	}
+
+	// Directive is factory interface helping instantiating scripts.
+	Directive struct {
+		Factory ScriptFactory
 	}
 )
 
@@ -143,29 +150,31 @@ var DactionFuncs = map[string]DactionFunc{
 
 // addDirectives adds directives to the virtual tree.
 func (tb *DirectoryBuilder) addDirectives(path []string, r io.Reader) error {
-	var d Directives
-	if _, err := toml.NewDecoder(r).Decode(&d); err != nil {
-		return fmt.Errorf(
-			"parsing directives %q failed: %w",
-			strings.Join(path, "/"), err)
-	}
-	curr := tb.root
-	if curr == nil {
-		curr = &Directory{}
-		tb.root = curr
-	}
-	for _, part := range path[:len(path)-1] {
-		if idx := slices.IndexFunc(curr.Folders, func(f *Directory) bool {
-			return f.Name == part
-		}); idx == -1 {
-			folder := &Directory{Name: part}
-			curr.Folders = append(curr.Folders, folder)
-			curr = folder
-		} else {
-			curr = curr.Folders[idx]
+	/*
+		var d Directives
+		if _, err := toml.NewDecoder(r).Decode(&d); err != nil {
+			return fmt.Errorf(
+				"parsing directives %q failed: %w",
+				strings.Join(path, "/"), err)
 		}
-	}
-	curr.Directives = &d
+		curr := tb.root
+		if curr == nil {
+			curr = &Directory{}
+			tb.root = curr
+		}
+		for _, part := range path[:len(path)-1] {
+			if idx := slices.IndexFunc(curr.Folders, func(f *Directory) bool {
+				return f.Name == part
+			}); idx == -1 {
+				folder := &Directory{Name: part}
+				curr.Folders = append(curr.Folders, folder)
+				curr = folder
+			} else {
+				curr = curr.Folders[idx]
+			}
+		}
+		curr.Directives = &d
+	*/
 	return nil
 }
 
@@ -202,30 +211,26 @@ func LoadDirectory(path string) (*Directory, error) {
 
 // FindDirectory traverses the given path and returns the first
 // directory.
-func (d *Directory) FindDirectory(path []string) *Directives {
-	for _, part := range path {
-		if part == "" {
-			continue
+func (d *Directory) FindDirectory(path []string) []Directive {
+	/*
+		for _, part := range path {
+			if part == "" {
+				continue
+			}
+			idx := slices.IndexFunc(d.Folders, func(f *Directory) bool {
+				return f.Name == part
+			})
+			if idx == -1 {
+				return nil
+			}
+			next := d.Folders[idx]
+			if next.Directives != nil {
+				return next.Directives
+			}
+			d = next
 		}
-		idx := slices.IndexFunc(d.Folders, func(f *Directory) bool {
-			return f.Name == part
-		})
-		if idx == -1 {
-			return nil
-		}
-		next := d.Folders[idx]
-		if next.Directives != nil {
-			return next.Directives
-		}
-		d = next
-	}
+	*/
 	return nil
-}
-
-type Script interface {
-	Enter(context any) error
-	Apply(context any, path []string, data []byte) ([]byte, error)
-	Leave(context any) error
 }
 
 func (d *Directory) FindScripts(path []string) []Script {

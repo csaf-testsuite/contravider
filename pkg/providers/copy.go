@@ -46,9 +46,9 @@ type (
 
 // storeCheckoutFromTar deserializes files from a tar stream as templates
 func storeCheckoutFromTar(targetDir string,
-	data *templateData,
 	r io.Reader,
-	directives func([]string, io.Reader) error) error {
+	directives func([]string, io.Reader) error,
+) error {
 	tr := tar.NewReader(r)
 	for {
 		hdr, err := tr.Next()
@@ -120,7 +120,7 @@ func templateFromTar(
 				slog.Error("failed to remove temp dir", "dir", tmpDir, "error", removeErr)
 			}
 		}()
-		if err := storeCheckoutFromTar(tmpDir, data, r, builder.addDirectives); err != nil {
+		if err := storeCheckoutFromTar(tmpDir, r, builder.addDirectives); err != nil {
 			return fmt.Errorf("extracting to temp failed: %w", err)
 
 		}
@@ -138,40 +138,42 @@ func templateFromTar(
 
 // applyDirectives walks the temp dir and applies all found directives
 func applyDirectives(d *Directory, path string) error {
-	if d == nil {
-		return nil
-	}
-	// Add current directory name to path
-	curPath := filepath.Join(path, d.Name)
-	// if it's nil, then there's no actions to do
-	if d.Directives != nil {
-		// Handle Setup first
-		for _, action := range d.Directives.Setup {
-			if err := runAction(action, curPath); err != nil {
-				return fmt.Errorf("setup failed at %s: %w", curPath, err)
+	/*
+		if d == nil {
+			return nil
+		}
+		// Add current directory name to path
+		curPath := filepath.Join(path, d.Name)
+		// if it's nil, then there's no actions to do
+		if d.Directives != nil {
+			// Handle Setup first
+			for _, action := range d.Directives.Setup {
+				if err := runAction(action, curPath); err != nil {
+					return fmt.Errorf("setup failed at %s: %w", curPath, err)
+				}
+			}
+			// Handle Apply second
+			for _, action := range d.Directives.Apply {
+				if err := runAction(action, curPath); err != nil {
+					return fmt.Errorf("apply failed at %s: %w", curPath, err)
+				}
 			}
 		}
-		// Handle Apply second
-		for _, action := range d.Directives.Apply {
-			if err := runAction(action, curPath); err != nil {
-				return fmt.Errorf("apply failed at %s: %w", curPath, err)
+		// Go through all subfolders recursively
+		for _, subDir := range d.Folders {
+			if err := applyDirectives(subDir, curPath); err != nil {
+				return err
 			}
 		}
-	}
-	// Go through all subfolders recursively
-	for _, subDir := range d.Folders {
-		if err := applyDirectives(subDir, curPath); err != nil {
-			return err
-		}
-	}
-	if d.Directives != nil {
-		// Handle the Teardown last, after the recursive function returned
-		for _, action := range d.Directives.Teardown {
-			if err := runAction(action, curPath); err != nil {
-				return fmt.Errorf("teardown failed at %s: %w", curPath, err)
+		if d.Directives != nil {
+			// Handle the Teardown last, after the recursive function returned
+			for _, action := range d.Directives.Teardown {
+				if err := runAction(action, curPath); err != nil {
+					return fmt.Errorf("teardown failed at %s: %w", curPath, err)
+				}
 			}
 		}
-	}
+	*/
 	return nil
 }
 
